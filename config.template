@@ -1,0 +1,88 @@
+#-E3DC Access
+#--IP address and port of your home power station
+E3DC_IP=
+E3DC_PORT=5033
+#--your E3/DC web account and the RSCP/AES password configured in the device (Issue #31)
+E3DC_USER=
+E3DC_PASSWORD=
+E3DC_AES_PASSWORD=
+
+#-System
+#--cycle interval in seconds (max 300 seconds)
+INTERVAL=1
+#--log mode defines the handling of errors/messages that are returned in response to a tag request
+#--OFF: no logs, ON: error is logged immediately when it occurs, BUFFERED: errors are buffered and printed at midnight, at the end of the program or by a /set/log/errors request
+#LOG_MODE=OFF
+#LOG_MODE=ON
+LOG_MODE=BUFFERED
+#--log files
+LOGFILE=/tmp/rscp2mqtt.log
+TOPIC_LOG_FILE=/tmp/rscp2mqtt.history
+#--set power mode
+AUTO_REFRESH=false
+#-- EMS requests
+EMS_REQUESTS=true
+#--Start of Operation
+HISTORY_START_YEAR=2022
+#--Request todays, weekly, monthly, yearly historical values
+HST_REQUESTS=true
+#--Request daily historical values
+DAILY_VALUES=true
+#--Publish statistic values
+STATISTIC_VALUES=true
+#--Save values as retained topics for setup during restart
+RETAIN_FOR_SETUP=true
+
+#-Topics
+#--Topic prefix (max 24 characters), default is e3dc
+PREFIX=e3dc
+
+#-Payload
+#--Boolean values true/false or 1/0
+USE_TRUE_FALSE=true
+
+#-Power Meter
+#--PM_INDEX can be set multiple times if several power meters exist, default is 0
+#--PM_EXTERN=true has the same effect as PM_INDEX=6 (6 for S10 Mini, compatibilty with previous releases)
+PM_EXTERN=false
+PM_INDEX=0
+PM_REQUESTS=true
+
+#-Photovoltaic Inverter
+PVI_REQUESTS=true
+#--Number of PVI strings/trackers (disables the auto detection)
+PVI_TRACKER=2
+
+#-Battery Settings
+#--Number of Battery Strings, default is 1
+BATTERY_STRINGS=1
+#--Battery Modules
+DCB_REQUESTS=true
+
+#-Raw Data Mode
+RAW_MODE=false
+#-- filter topics to be published (optional, only one entry possible!)
+RAW_TOPIC_REGEX=raw/TAG_DCDC_DATA/.*
+
+#-Additional Tags and Topics
+#--please look at NEWTAGS.md
+
+#-Battery SOC Limiter
+SOC_LIMITER=true
+LIMIT_CHARGE_SOC=0
+LIMIT_DISCHARGE_SOC=0
+LIMIT_CHARGE_DURABLE=false
+LIMIT_DISCHARGE_DURABLE=false
+LIMIT_DISCHARGE_BY_HOME_POWER=0
+
+#-Wallboxes
+#--for the wallboxes specified by WB_INDEX (0..7)
+#--use multiple WB_INDEX entries for further wallboxes
+WALLBOX=true
+WB_INDEX=0
+
+#-Forced Topics
+#--will be published with every cycle
+FORCE_PUB=e3dc/[a-z]+/power
+FORCE_PUB=e3dc/battery/soc
+FORCE_PUB=e3dc/pvi/.*/string_[1,2]
