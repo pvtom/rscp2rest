@@ -22,6 +22,8 @@ const OUTPUT_PIPE_PATH = '/tmp/rscp2p.fifo.cmd';
 const app = express();
 app.use(express.json());
 
+app.use(express.static(path.join(__dirname, 'public')));
+
 let dataStore = {};
 
 const readFromPipe = () => {
@@ -109,6 +111,10 @@ app.delete('/data/:key', (req, res) => {
     } else {
         res.status(404).json({ error: 'Key not found' });
     }
+});
+
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public/index.html'));
 });
 
 if (USE_HTTPS) {

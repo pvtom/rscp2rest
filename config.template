@@ -30,12 +30,10 @@ HST_REQUESTS=true
 DAILY_VALUES=true
 #--Publish statistic values
 STATISTIC_VALUES=true
-#--Save values as retained topics for setup during restart
-RETAIN_FOR_SETUP=true
 
-#-Topics
-#--Topic prefix (max 24 characters), default is e3dc
-PREFIX=e3dc
+#-Keys
+#--Key prefix, default is no prefix
+#PREFIX=e3dc
 
 #-Payload
 #--Boolean values true/false or 1/0
@@ -61,11 +59,8 @@ DCB_REQUESTS=true
 
 #-Raw Data Mode
 RAW_MODE=false
-#-- filter topics to be published (optional, only one entry possible!)
+#-- filter keys to be published (optional, only one entry possible!)
 RAW_TOPIC_REGEX=raw/TAG_DCDC_DATA/.*
-
-#-Additional Tags and Topics
-#--please look at NEWTAGS.md
 
 #-Battery SOC Limiter
 SOC_LIMITER=true
@@ -81,8 +76,8 @@ LIMIT_DISCHARGE_BY_HOME_POWER=0
 WALLBOX=true
 WB_INDEX=0
 
-#-Forced Topics
+#-Forced Keys
 #--will be published with every cycle
-FORCE_PUB=e3dc/[a-z]+/power
-FORCE_PUB=e3dc/battery/soc
-FORCE_PUB=e3dc/pvi/.*/string_[1,2]
+FORCE_PUB=[a-z]+/power
+FORCE_PUB=battery/soc
+FORCE_PUB=pvi/.*/string_[1,2]

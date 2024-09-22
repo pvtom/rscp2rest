@@ -25,7 +25,7 @@ typedef struct _config_t {
     char e3dc_user[128];
     char e3dc_password[128];
     char aes_password[128];
-    char prefix[25];
+    char *prefix;
     int history_start_year;
     char *logfile;
     char *historyfile;

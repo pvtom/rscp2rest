@@ -69,9 +69,9 @@ curl -k https://<your server>:3300/data/<key>/raw
 Examples:
 ```
 # JSON
-curl http://<your server>:3300/data/e3dc_pvi_frequency
+curl http://<your server>:3300/data/pvi_frequency
 {
-  "e3dc_pvi_frequency": {
+  "pvi_frequency": {
     "value": "50.00",
     "unit": "Hz",
     "timestamp": "2024-09-12T22:08:00+02:00"
@@ -79,7 +79,7 @@ curl http://<your server>:3300/data/e3dc_pvi_frequency
 }
 
 # RAW
-curl http://<your server>:3300/data/e3dc_pvi_frequency/raw
+curl http://<your server>:3300/data/pvi_frequency/raw
 50.00
 ```
 
@@ -91,7 +91,7 @@ curl -X POST -H "Content-Type: application/json" -d '{"key":"<key>","value":"<va
 ```
 Example:
 ```
-curl -X POST -H "Content-Type: application/json" -d '{"key":"e3dc_ems_weather_regulation","value":"true"}' http://<your server>:3300/data
+curl -X POST -H "Content-Type: application/json" -d '{"key":"ems_weather_regulation","value":"true"}' http://<your server>:3300/data
 ```
 
 ### DELETE Requests
@@ -100,6 +100,10 @@ DELETE removes data records from the cache. This can be useful for deleting old 
 ```
 curl -X DELETE http://<your server>:3300/data/<key>
 ```
+
+## Website
+
+To get an overview of the data, a small website is available at http://<your server>:3300/
 
 ## Libraries and Licenses
 

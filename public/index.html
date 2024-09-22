@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>rscp2rest</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f9;
+            color: #333;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: left;
+            font-size: 28px;
+            margin-bottom: 20px;
+            color: #777;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .sort-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #dfe6e9;
+            border-radius: 5px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            margin-right: 10px;
+        }
+
+        select {
+            padding: 12px;
+            border: 1px solid #dfe6e9;
+            border-radius: 5px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        select:focus, input:focus {
+            border-color: #3498db;
+            outline: none;
+            box-shadow: 0 0 8px rgba(52, 152, 219, 0.3);
+        }
+
+        button {
+            padding: 12px 20px;
+            background-color: #3498db;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #ecf0f1;
+        }
+
+        th {
+            background-color: #ecf0f1;
+            color: #2c3e50;
+            text-align: left;
+            font-weight: bold;
+        }
+
+        td {
+            background-color: #fff;
+            color: #2c3e50;
+        }
+
+        tr:nth-child(even) td {
+            background-color: #f8f9fa;
+        }
+
+        .counter {
+            margin-top: 10px;
+            text-align: right;
+            font-size: 14px;
+            color: #2c3e50;
+        }
+
+        /* Responsive table */
+        @media (max-width: 768px) {
+            table, thead, tbody, th, td, tr {
+                display: block;
+            }
+
+            thead {
+                display: none;
+            }
+
+            tr {
+                margin-bottom: 15px;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+                border-radius: 5px;
+                overflow: hidden;
+            }
+
+            td {
+                display: flex;
+                justify-content: space-between;
+                padding: 10px 15px;
+                border: none;
+                background-color: #fff;
+                border-bottom: 1px solid #ddd;
+            }
+
+            td:before {
+                content: attr(data-label);
+                font-weight: bold;
+                text-transform: uppercase;
+                color: #7f8c8d;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Overview</h1>
+        <div class="input-group">
+            <input type="text" id="filterInput" placeholder="Filter keys..." oninput="filterData()" />
+            <button onclick="refreshData()">Refresh</button>
+        </div>
+        <div class="sort-group">
+            <label for="sortField">Sort by:</label>
+            <select id="sortField" onchange="filterData()">
+                <option value="key">Key</option>
+                <option value="timestamp">Last Modified</option>
+            </select> 
+            <select id="sortOrder" onchange="filterData()">
+                <option value="asc">Ascending</option>
+                <option value="desc">Descending</option>
+            </select>
+        </div>
+        <table id="dataTable">
+            <thead>
+                <tr>
+                    <th>Key</th>
+                    <th>Value</th>
+                    <th>Unit</th>
+                    <th>Last Modified</th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+        <div class="counter" id="rowCounter">
+            Displayed: 0 / Total: 0
+        </div>
+    </div>
+
+    <script>
+        let allData = {};
+
+        function refreshData() {
+            fetch('/data')
+                .then(response => response.json())
+                .then(data => {
+                    allData = data;
+                    filterData();
+                })
+                .catch(error => {
+                    console.error('Error fetching data:', error);
+                });
+        }
+
+        function displayData(data) {
+            const tableBody = document.querySelector('#dataTable tbody');
+            tableBody.innerHTML = '';
+
+            let sortedData = Object.entries(data);
+
+            const sortField = document.getElementById('sortField').value;
+            const sortOrder = document.getElementById('sortOrder').value;
+
+            sortedData.sort((a, b) => {
+                let compareA, compareB;
+                if (sortField === 'key') {
+                    compareA = a[0].toLowerCase();
+                    compareB = b[0].toLowerCase();
+                } else {
+                    compareA = a[1].timestamp;
+                    compareB = b[1].timestamp;
+                }
+
+                if (compareA < compareB) return sortOrder === 'asc' ? -1 : 1;
+                if (compareA > compareB) return sortOrder === 'asc' ? 1 : -1;
+                return 0;
+            });
+
+            sortedData.forEach(([key, { value, unit, timestamp }]) => {
+                const row = document.createElement('tr');
+                const keyCell = document.createElement('td');
+                const valueCell = document.createElement('td');
+                const unitCell = document.createElement('td');
+                const timestampCell = document.createElement('td');
+
+                keyCell.textContent = key;
+                valueCell.textContent = value;
+                unitCell.textContent = unit;
+                timestampCell.textContent = timestamp;
+
+                keyCell.setAttribute('data-label', 'Key');
+                valueCell.setAttribute('data-label', 'Value');
+                unitCell.setAttribute('data-label', 'Unit');
+                timestampCell.setAttribute('data-label', 'Last Modified');
+
+                row.appendChild(keyCell);
+                row.appendChild(valueCell);
+                row.appendChild(unitCell);
+                row.appendChild(timestampCell);
+
+                tableBody.appendChild(row);
+            });
+
+            updateRowCounter(sortedData.length, Object.keys(allData).length);
+        }
+
+        function filterData() {
+            const filterValue = document.getElementById('filterInput').value.toLowerCase();
+            const filteredData = {};
+
+            Object.keys(allData).forEach(key => {
+                if (key.toLowerCase().includes(filterValue)) {
+                    filteredData[key] = allData[key];
+                }
+            });
+
+            displayData(filteredData);
+        }
+
+        function updateRowCounter(displayed, total) {
+            const counterElement = document.getElementById('rowCounter');
+            counterElement.textContent = `Displayed: ${displayed} / Total: ${total}`;
+        }
+
+        setInterval(refreshData, 2000);
+
+        window.onload = refreshData;
+    </script>
+</body>
+</html>

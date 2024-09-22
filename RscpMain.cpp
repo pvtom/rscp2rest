@@ -18,8 +18,8 @@
 #include <mutex>
 #include <fcntl.h>
 
-#define RSCP2P                  "1.0"
-#define RSCP2P_LONG             "1.0.3.30"
+#define RSCP2P                  "1.1"
+#define RSCP2P_LONG             "1.1.3.30"
 
 #define AES_KEY_SIZE            32
 #define AES_BLOCK_SIZE          32
@@ -29,7 +29,6 @@
 #define DEFAULT_INTERVAL_MIN    1
 #define DEFAULT_INTERVAL_MAX    300
 #define IDLE_PERIOD_CACHE_SIZE  14
-#define DEFAULT_PREFIX          "e3dc"
 #define RECURSION_MAX_LEVEL     7
 
 #define CHARGE_LOCK_TRUE        "today:charge:true:00:00-23:59"
@@ -166,7 +165,8 @@ int storeMQTTReceivedValue(std::vector<RSCP_MQTT::rec_cache_t> & c, char *topic_
     mqttRcvd = true;
 
     for (std::vector<RSCP_MQTT::rec_cache_t>::iterator it = c.begin(); it != c.end(); ++it) {
-        snprintf(topic, TOPIC_SIZE, "%s_%s", cfg.prefix, it->topic);
+        if (cfg.prefix) snprintf(topic, TOPIC_SIZE, "%s_%s", cfg.prefix, it->topic);
+        else strcpy(topic, it->topic);
         if (!strcmp(topic, topic_in) && it->done) {
             if (std::regex_match(payload, std::regex(it->regex_true))) {
                 if (strcmp(it->value_true, "")) strncpy(it->payload, it->value_true, PAYLOAD_SIZE);
@@ -208,7 +208,7 @@ void fifoListener() {
         read(fd, fifo, 1024);   
         if (strlen(fifo)) {
             if (sscanf(fifo, "%127[^=]=%127[^\n]", key, value) == 2) {
-                if (strstr(key, cfg.prefix)) {
+                if (!cfg.prefix || (strstr(key, cfg.prefix))) {
                     storeMQTTReceivedValue(RSCP_MQTT::RscpMqttReceiveCache, key, value);
                     if (cfg.verbose) logMessage(cfg.logfile, (char *)__FILE__, __LINE__, (char *)"fifoListener: >%s< >%s< received\n", key, value);
                 }
@@ -468,7 +468,11 @@ int handleMQTTIdlePeriods(std::vector<RSCP_MQTT::idle_period_t> & v) {
 
     while (!v.empty()) {
         e = v.back();
-        snprintf(topic, TOPIC_SIZE, "%s/idle_period/%s/%s", cfg.prefix, RSCP_MQTT::days[e.day].c_str(), e.type?"discharge":"charge");
+        if (cfg.prefix) {
+            snprintf(topic, TOPIC_SIZE, "%s/idle_period/%s/%s", cfg.prefix, RSCP_MQTT::days[e.day].c_str(), e.type?"discharge":"charge");
+        } else {
+            snprintf(topic, TOPIC_SIZE, "idle_period/%s/%s", RSCP_MQTT::days[e.day].c_str(), e.type?"discharge":"charge");
+        }
         snprintf(payload, PAYLOAD_SIZE, "%s:%02d:%02d-%02d:%02d", e.active?"true":"false", e.starthour, e.startminute, e.endhour, e.endminute);
         sprintf(fifo, "$=%s=%s=%s=$\n", topic, payload, "");
         writeFifo(fifo, false);
@@ -487,11 +491,19 @@ int handleMQTTErrorMessages(std::vector<RSCP_MQTT::error_t> & v) {
 
     while (!v.empty()) {
         e = v.back();
-        snprintf(topic, TOPIC_SIZE, "%s/error_message/%d/meta", cfg.prefix, ++i);
+        if (cfg.prefix) {
+            snprintf(topic, TOPIC_SIZE, "%s/error_message/%d/meta", cfg.prefix, ++i);
+        } else {
+            snprintf(topic, TOPIC_SIZE, "error_message/%d/meta", ++i);
+        }
         snprintf(payload, PAYLOAD_SIZE, "type %d code %d source %s", e.type, e.code, e.source);
         sprintf(fifo, "$=%s=%s=%s=$\n", topic, payload, "");
         writeFifo(fifo, false);
-        snprintf(topic, TOPIC_SIZE, "%s/error_message/%d", cfg.prefix, i);
+        if (cfg.prefix) {
+            snprintf(topic, TOPIC_SIZE, "%s/error_message/%d", cfg.prefix, i);
+        } else {
+            snprintf(topic, TOPIC_SIZE, "error_message/%d", i);
+        }
         sprintf(fifo, "$=%s=%s=%s=$\n", topic, e.message, "");
         writeFifo(fifo, false);
         v.pop_back();
@@ -817,7 +829,7 @@ int handleImmediately(RscpProtocol *protocol, SRscpValue *response, uint32_t con
                     break;
                 }
             }
-            sprintf(fifo, "$=%s=%s=%s=$\n", topic, payload, "");
+            sprintf(fifo, "$=%s=%s=%s=$\n", topic, payload, it->unit);
             writeFifo(fifo, false);
         }
     }
@@ -2613,6 +2625,7 @@ static void mainLoop(void) {
                 }
                 publishImmediately((char *)"rscp2p/version", (char *)RSCP2P);
                 publishImmediately((char *)"rscp2p/long_version", (char *)RSCP2P_LONG);
+                refreshCache(RSCP_MQTT::RscpMqttCache, (char *)".*");
                 if (cfg.once) go = false;
             }
             sleep(1);
@@ -2690,7 +2703,7 @@ int main(int argc, char *argv[]) {
     cfg.statistic_values = true;
     cfg.wallbox = false;
     cfg.auto_refresh = false;
-    strcpy(cfg.prefix, DEFAULT_PREFIX);
+    cfg.prefix = NULL;
     cfg.history_start_year = curr_year - 1;
     cfg.mqtt_pub = true;
     cfg.logfile = NULL;
@@ -2723,7 +2736,7 @@ int main(int argc, char *argv[]) {
             else if (strcasecmp(key, "E3DC_AES_PASSWORD") == 0)
                 strcpy(cfg.aes_password, value);
             else if (strcasecmp(key, "PREFIX") == 0)
-                strncpy(cfg.prefix, value, 24);
+                cfg.prefix = strdup(value);
             else if (strcasecmp(key, "HISTORY_START_YEAR") == 0)
                 cfg.history_start_year = atoi(value);
             else if (strcasecmp(key, "LOGFILE") == 0) {
@@ -2863,7 +2876,7 @@ int main(int argc, char *argv[]) {
     env = getenv("E3DC_AES_PASSWORD");
     if (env) strcpy(cfg.aes_password, env);
     env = getenv("PREFIX");
-    if (env) strncpy(cfg.prefix, env, 24);
+    if (env) cfg.prefix = strdup(env);
     env = getenv("HISTORY_START_YEAR");
     if (env) cfg.history_start_year = atoi(env);
     env = getenv("INTERVAL");
@@ -2932,8 +2945,10 @@ int main(int argc, char *argv[]) {
         exit(EXIT_FAILURE);
     }
 
-    addPrefix(RSCP_MQTT::RscpMqttCache, cfg.prefix);
-    addPrefix(RSCP_MQTT::RscpMqttCacheTempl, cfg.prefix);
+    if (cfg.prefix) {
+        addPrefix(RSCP_MQTT::RscpMqttCache, cfg.prefix);
+        addPrefix(RSCP_MQTT::RscpMqttCacheTempl, cfg.prefix);
+    }
 
     // Additional Tags
     sort(RSCP_MQTT::AdditionalTags.begin(), RSCP_MQTT::AdditionalTags.end(), RSCP_MQTT::compareAdditionalTags);
@@ -3107,6 +3122,7 @@ int main(int argc, char *argv[]) {
     if (cfg.logfile) free(cfg.logfile);
     if (cfg.historyfile) free(cfg.historyfile);
     if (cfg.raw_topic_regex) free(cfg.raw_topic_regex);
+    if (cfg.prefix) free(cfg.prefix);
 
     exit(EXIT_SUCCESS);
 }
