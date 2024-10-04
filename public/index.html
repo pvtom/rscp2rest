@@ -13,22 +13,21 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f4f7f9;
-            color: #333;
+            background-color: #030303;
+            color: #79b41c;
             padding: 20px;
         }
 
         h1 {
             text-align: left;
-            font-size: 28px;
+            font-size: 32px;
             margin-bottom: 20px;
-            color: #777;
+            color: #79b41c;
         }
 
         .container {
-            max-width: 900px;
             margin: 0 auto;
-            background-color: #fff;
+            background-color: #030303;
             padding: 20px;
             border-radius: 10px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
@@ -49,7 +48,7 @@
 
         input {
             width: 100%;
-            padding: 12px;
+            padding: 6px;
             border: 1px solid #dfe6e9;
             border-radius: 5px;
             font-size: 16px;
@@ -58,7 +57,7 @@
         }
 
         select {
-            padding: 12px;
+            padding: 6px;
             border: 1px solid #dfe6e9;
             border-radius: 5px;
             font-size: 16px;
@@ -66,13 +65,13 @@
         }
 
         select:focus, input:focus {
-            border-color: #3498db;
+            border-color: #79b41c;
             outline: none;
             box-shadow: 0 0 8px rgba(52, 152, 219, 0.3);
         }
 
         button {
-            padding: 12px 20px;
+            padding: 6px 20px;
             background-color: #3498db;
             color: #fff;
             border: none;
@@ -93,31 +92,30 @@
         }
 
         th, td {
-            padding: 12px 15px;
-            border-bottom: 1px solid #ecf0f1;
+            padding: 10px 15px;
         }
 
         th {
-            background-color: #ecf0f1;
-            color: #2c3e50;
+            background-color: #79b41c;
+            color: #fff;
             text-align: left;
             font-weight: bold;
         }
 
         td {
             background-color: #fff;
-            color: #2c3e50;
+            color: #030303;
         }
 
         tr:nth-child(even) td {
-            background-color: #f8f9fa;
+            background-color: #c9ee91;
         }
 
         .counter {
             margin-top: 10px;
             text-align: right;
             font-size: 14px;
-            color: #2c3e50;
+            color: #79b41c;
         }
 
         /* Responsive table */
@@ -140,7 +138,7 @@
             td {
                 display: flex;
                 justify-content: space-between;
-                padding: 10px 15px;
+                padding: 4px 6px;
                 border: none;
                 background-color: #fff;
                 border-bottom: 1px solid #ddd;
@@ -149,15 +147,14 @@
             td:before {
                 content: attr(data-label);
                 font-weight: bold;
-                text-transform: uppercase;
-                color: #7f8c8d;
+                color: #030303;
             }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Overview</h1>
+        <h1>HOME POWER</h1>
         <div class="input-group">
             <input type="text" id="filterInput" placeholder="Filter keys..." oninput="filterData()" />
             <button onclick="refreshData()">Refresh</button>
@@ -239,7 +236,7 @@
                 keyCell.textContent = key;
                 valueCell.textContent = value;
                 unitCell.textContent = unit;
-                timestampCell.textContent = timestamp;
+                timestampCell.textContent = timestamp.replace("T"," ").substring(0,19);
 
                 keyCell.setAttribute('data-label', 'Key');
                 valueCell.setAttribute('data-label', 'Value');

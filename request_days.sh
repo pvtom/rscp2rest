@@ -1,16 +1,24 @@
 #!/bin/bash
 
-if [ $# -ne 6 ]; then
-    echo "Usage: $0 <http or https> <host> <port> <prefix> <start_date> <end_date>"
+if [ $# -eq 5 ]; then
+    protocol=$1
+    host=$2
+    port=$3
+    prefix=""
+    start_date=$4
+    end_date=$5
+elif [ $# -eq 6 ]; then
+    protocol=$1
+    host=$2
+    port=$3
+    prefix=${4}_
+    start_date=$5
+    end_date=$6
+else
+    echo "Usage: $0 <http or https> <host> <port> <start_date> <end_date>"
+    echo "       $0 <http or https> <host> <port> <prefix> <start_date> <end_date>"
     exit 1
 fi
-
-protocol=$1
-host=$2
-port=$3
-prefix=$4
-start_date=$5
-end_date=$6
 
 if ! [[ $port =~ ^[0-9]+$ ]]; then
     echo "Invalid port number. Please provide a positive integer."
@@ -36,8 +44,8 @@ fi
 end_date=$(date -d "$end_date + 1 day" +"%Y-%m-%d")
 
 while [[ $start_date < $end_date ]]; do
-    echo "Requesting data ${prefix}_request_day for $start_date"
-    s="{\"key\":\"${prefix}_request_day\",\"value\":\"$start_date\"}"
+    echo "Requesting data ${prefix}request_day for $start_date"
+    s="{\"key\":\"${prefix}request_day\",\"value\":\"$start_date\"}"
     curl -k -X POST -H "Content-Type: application/json" -d $s $protocol://$host:$port/data
     echo ""
     start_date=$(date -d "$start_date + 1 day" +"%Y-%m-%d")
