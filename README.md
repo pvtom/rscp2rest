@@ -21,11 +21,14 @@ docker run --rm -d -e TZ=Europe/Berlin -e E3DC_IP=<ip address> -e E3DC_USER=<use
 ```
 # Set program parameters with -e, supported are:
 
+# mandatory
 E3DC_IP
-E3DC_PORT
+E3DC_PORT (default: 5033)
 E3DC_USER
 E3DC_PASSWORD
 E3DC_AES_PASSWORD
+
+# optional
 PREFIX
 INTERVAL
 RAW_MODE
@@ -42,7 +45,7 @@ Or start the container with an existing .config file
 docker run --rm -d -e TZ=Europe/Berlin -v /path/to/your/.config:/opt/rscp2p/.config -p3300:3300 pvtom/rscp2rest:latest
 ```
 
-Please follow the [README](https://github.com/pvtom/rscp2mqtt/blob/main/README.md) of rscp2mqtt to create a .config file.
+Please follow the [README](https://github.com/pvtom/rscp2mqtt/blob/main/README.md#configuration) of rscp2mqtt to create a .config file and take a look at the [template](config.template).
 
 ## Start Docker Container (HTTPS)
 ```
@@ -55,17 +58,15 @@ Take a look at the [overview](KEYS.md) of the available keys that can be queried
 ## API
 ### GET Requests
 
-GET retrieves all or individual data records, consisting of the key (corresponds to a topic), the value (corresponds to the payload), the unit and the timestamp of the last change.
+GET retrieves all or individual data records, consisting of the key, the value, the unit and the timestamp of the last change in JSON or raw format.
 ```
-# HTTP
 curl http://<your server>:3300/data
 curl http://<your server>:3300/data/<key>
 curl http://<your server>:3300/data/<key>/raw
-# HTTPS
-curl -k https://<your server>:3300/data
-curl -k https://<your server>:3300/data/<key>
-curl -k https://<your server>:3300/data/<key>/raw
 ```
+
+If the server is running under https, you can use the option -k when calling curl, e.g. `curl -k https://<your server>:3300/data`
+
 Examples:
 ```
 # JSON
@@ -103,7 +104,9 @@ curl -X DELETE http://<your server>:3300/data/<key>
 
 ## Website
 
-To get an overview of the data, a small website is available at http://<your server>:3300/
+To get an overview of the data, a small website is available at `http://<your server>:3300`
+
+![Website](image.png)
 
 ## Libraries and Licenses
 

@@ -2,7 +2,7 @@
 #--IP address and port of your home power station
 E3DC_IP=
 E3DC_PORT=5033
-#--your E3/DC web account and the RSCP/AES password configured in the device (Issue #31)
+#--your E3/DC web account and the RSCP/AES password configured in the device
 E3DC_USER=
 E3DC_PASSWORD=
 E3DC_AES_PASSWORD=

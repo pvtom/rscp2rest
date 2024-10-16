@@ -168,12 +168,12 @@
 | PVI Energy L1 | pvi_energy_all_L1 | [Wh] |
 | PVI Energy L2 | pvi_energy_all_L2 | [Wh] |
 | PVI Energy L3 | pvi_energy_all_L3 | [Wh] |
-| PVI Energy String1 (today) | pvi_energy_string_1 | Wh |
-| PVI Energy String2 (today) | pvi_energy_string_2 | Wh |
-| PVI Energy String1 (all-time) | pvi_energy_all_string_1 | Wh |
-| PVI Energy String2 (all-time) | pvi_energy_all_string_2 | Wh |
-| PVI Energy String1 (midnight) | pvi_energy_start_string_1 | Wh |
-| PVI Energy String2 (midnight) | pvi_energy_start_string_2 | Wh |
+| PVI Energy String1 (today) | pvi_energy_string_1 | [Wh] |
+| PVI Energy String2 (today) | pvi_energy_string_2 | [Wh] |
+| PVI Energy String1 (all-time) | pvi_energy_all_string_1 | [Wh] |
+| PVI Energy String2 (all-time) | pvi_energy_all_string_2 | [Wh] |
+| PVI Energy String1 (midnight) | pvi_energy_start_string_1 | [Wh] |
+| PVI Energy String2 (midnight) | pvi_energy_start_string_2 | [Wh] |
 | PVI Frequency | pvi_frequency_over | [Hz] |
 | PVI Frequency | pvi_frequency_under | [Hz] |
 | PVI Max Apparent Power L1 | pvi_max_apparent_power_L1 | [VA] |
@@ -300,7 +300,7 @@
 | Limit discharging of the house battery to SOC | limit_discharge_soc | (0..100) |
 | Set the home power value which stops discharging the battery | limit_discharge_by_home_power | [W] |
 | Keep the limiter setting even after the day change | limit_discharge_durable | (true/false) |
-| Limit charging of the house battery to SOC | limit_charge_soc | (0-100) |
+| Limit charging of the house battery to SOC | limit_charge_soc | (0..100) |
 | Keep the limiter setting even after the day change | limit_charge_durable | (true/false) |
 | Emergency Power | | |
 | Set battery reserve for emergency power in [Wh] | reserve_energy | [Wh] |
@@ -330,7 +330,7 @@
 | Log all topics and payloads to the log file | log_cache | 1 |
 | Log collected error messages to the log file | log_errors | 1 |
 | Log internal stuff to the log file | health | 1 |
-| Set refresh interval [sec] | interval | (1-300) |
+| Set refresh interval [sec] | interval | (1..300) |
 | Enable PM requests | requests_pm | (true/false) |
 | Enable PVI requests | requests_pvi | (true/false) |
 | Enable DCB requests | requests_dcb | (true/false) |
