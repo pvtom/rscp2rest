@@ -12,14 +12,15 @@
 #include "AES.h"
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/time.h>
 #include <signal.h>
 #include <thread>
 #include <regex>
 #include <mutex>
 #include <fcntl.h>
 
-#define RSCP2P                  "1.1"
-#define RSCP2P_LONG             "1.1.3.30"
+#define RSCP2P                  "1.3"
+#define RSCP2P_LONG             "1.3.3.31"
 
 #define AES_KEY_SIZE            32
 #define AES_BLOCK_SIZE          32
@@ -83,15 +84,21 @@ void signal_handler(int sig) {
     }
 }
 
-void wsleep(int sec) {
-    for (uint8_t i = 0; i < sec; i++) {
+void wsleep(double seconds) {
+    while (seconds > 0.0) {
         mtx.lock();
         if (mqttRcvd || !go) {
             mtx.unlock();
             return;
         }
         mtx.unlock();
-        sleep(1);
+        if (seconds >= 1.0) {
+            sleep(1);
+        } else {
+            useconds_t usec = (useconds_t)(seconds * 1e6);
+            if (usec > 0) usleep(usec);
+        }
+        seconds = seconds - 1.0;
     }
     return;
 }
@@ -227,6 +234,8 @@ int handleSetPower(std::vector<RSCP_MQTT::rec_cache_t> & c, uint32_t container, 
     char cmd[12];
     char power[12];
     char modus[2];
+    time_t now;
+    time(&now);
 
     if (!strcmp(payload, "auto")) {
         strcpy(cycles, "0");
@@ -246,12 +255,12 @@ int handleSetPower(std::vector<RSCP_MQTT::rec_cache_t> & c, uint32_t container, 
             switch (it->tag) {
                 case TAG_EMS_REQ_SET_POWER_MODE: {
                     strcpy(it->payload, modus);
-                    it->refresh_count = abs(atoi(cycles));
+                    it->refresh_until = abs(atoi(cycles)) * cfg.interval + now;
                     break;
                 }
                 case TAG_EMS_REQ_SET_POWER_VALUE: {
                     strcpy(it->payload, power);
-                    it->refresh_count = abs(atoi(cycles));
+                    it->refresh_until = abs(atoi(cycles)) * cfg.interval + now;
                     break;
                 }
             }
@@ -1783,10 +1792,11 @@ void createRequest(SRscpFrameBuffer * frameBuffer) {
             SRscpValue ReqContainer;
             int sun_mode = 0;
             int max_current = -1;
+            time_t now;
+            time(&now);
 
             for (std::vector<RSCP_MQTT::rec_cache_t>::iterator it = RSCP_MQTT::RscpMqttReceiveCache.begin(); it != RSCP_MQTT::RscpMqttReceiveCache.end(); ++it) {
-                if ((it->done == false) || (it->refresh_count > 0)) {
-                    if (it->refresh_count > 0) it->refresh_count = it->refresh_count - 1;
+                if ((it->done == false) || (it->refresh_until > now)) {
                     if (!it->container && !it->tag) { //system call
                         if (!strcmp(it->topic, "log") || !strcmp(it->topic, "log_cache")) logCache(RSCP_MQTT::RscpMqttCache, cfg.logfile);
                         if (!strcmp(it->topic, "log_rcache")) logRecCache(RSCP_MQTT::RscpMqttReceiveCache, cfg.logfile);
@@ -2554,6 +2564,8 @@ static void receiveLoop(bool & bStopExecution) {
 static void mainLoop(void) {
     RscpProtocol protocol;
     bool bStopExecution = false;
+    struct timeval start, end;
+    double elapsed;
     int countdown = 3;
 
     while (go && !bStopExecution) {
@@ -2562,6 +2574,8 @@ static void mainLoop(void) {
         //--------------------------------------------------------------------------------------------------------------
         SRscpFrameBuffer frameBuffer;
         memset(&frameBuffer, 0, sizeof(frameBuffer));
+
+        gettimeofday(&start, NULL);
 
         // create an RSCP frame with requests to some example data
         createRequest(&frameBuffer);
@@ -2630,7 +2644,10 @@ static void mainLoop(void) {
             }
             sleep(1);
         } else {
-            wsleep(cfg.interval);
+            gettimeofday(&end, NULL);
+            elapsed = end.tv_sec - start.tv_sec + (end.tv_usec - start.tv_usec) * 1e-6;
+            elapsed = (double)cfg.interval - elapsed;
+            if (elapsed > 0.0) wsleep(elapsed);
         }
     }
     return;
@@ -3102,7 +3119,7 @@ int main(int argc, char *argv[]) {
         SocketClose(iSocket);
         iSocket = -1;
 
-        wsleep(DELAY_BEFORE_RECONNECT);
+        wsleep((double)DELAY_BEFORE_RECONNECT);
     }
 
     if (cfg.log_level) {

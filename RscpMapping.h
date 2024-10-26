@@ -3,6 +3,7 @@
 
 #include "RscpTags.h"
 #include "RscpTypes.h"
+#include <sys/time.h>
 #include <queue>
 
 #define TOPIC_SIZE        128
@@ -494,54 +495,54 @@ typedef struct _rec_cache_t {
     char payload[PAYLOAD_SIZE];
     char unit[UNIT_SIZE];
     int type;
-    int refresh_count;
+    time_t refresh_until;
     bool queue;
     bool done;
 } rec_cache_t;
 
 rec_cache_t rec_cache[] = {
-    { 0, TAG_EMS_REQ_START_MANUAL_CHARGE, 0, "ems_manual_charge", PAYLOAD_REGEX_5_DIGIT, "", "", "", "", UNIT_W, RSCP::eTypeUInt32, -1, false, true },
-    { TAG_EMS_REQ_SET_POWER_SETTINGS, TAG_EMS_WEATHER_REGULATED_CHARGE_ENABLED, 0, "ems_weather_regulation", "^true|on|1$", "1", "^false|off|0$", "0", "", UNIT_NONE, RSCP::eTypeUChar8, -1, false, true },
-    { TAG_EMS_REQ_SET_POWER_SETTINGS, TAG_EMS_POWER_LIMITS_USED, 0, "ems_power_limits", "^true|on|1$", "true", "^false|off|0$", "false", "", UNIT_NONE, RSCP::eTypeBool, -1, false, true },
-    { TAG_EMS_REQ_SET_POWER_SETTINGS, TAG_EMS_DISCHARGE_START_POWER, 0, "ems_discharge_start_power",  PAYLOAD_REGEX_5_DIGIT, "", "", "", "", UNIT_W, RSCP::eTypeUInt32, -1, false, true },
-    { TAG_EMS_REQ_SET_POWER_SETTINGS, TAG_EMS_MAX_CHARGE_POWER, 0, "ems_max_charge_power", PAYLOAD_REGEX_5_DIGIT, "", "", "", "", UNIT_W, RSCP::eTypeUInt32, -1, false, true },
-    { TAG_EMS_REQ_SET_POWER_SETTINGS, TAG_EMS_MAX_DISCHARGE_POWER, 0, "ems_max_discharge_power", PAYLOAD_REGEX_5_DIGIT, "", "", "", "", UNIT_W, RSCP::eTypeUInt32, -1, false, true },
+    { 0, TAG_EMS_REQ_START_MANUAL_CHARGE, 0, "ems_manual_charge", PAYLOAD_REGEX_5_DIGIT, "", "", "", "", UNIT_W, RSCP::eTypeUInt32, 0, false, true },
+    { TAG_EMS_REQ_SET_POWER_SETTINGS, TAG_EMS_WEATHER_REGULATED_CHARGE_ENABLED, 0, "ems_weather_regulation", "^true|on|1$", "1", "^false|off|0$", "0", "", UNIT_NONE, RSCP::eTypeUChar8, 0, false, true },
+    { TAG_EMS_REQ_SET_POWER_SETTINGS, TAG_EMS_POWER_LIMITS_USED, 0, "ems_power_limits", "^true|on|1$", "true", "^false|off|0$", "false", "", UNIT_NONE, RSCP::eTypeBool, 0, false, true },
+    { TAG_EMS_REQ_SET_POWER_SETTINGS, TAG_EMS_DISCHARGE_START_POWER, 0, "ems_discharge_start_power",  PAYLOAD_REGEX_5_DIGIT, "", "", "", "", UNIT_W, RSCP::eTypeUInt32, 0, false, true },
+    { TAG_EMS_REQ_SET_POWER_SETTINGS, TAG_EMS_MAX_CHARGE_POWER, 0, "ems_max_charge_power", PAYLOAD_REGEX_5_DIGIT, "", "", "", "", UNIT_W, RSCP::eTypeUInt32, 0, false, true },
+    { TAG_EMS_REQ_SET_POWER_SETTINGS, TAG_EMS_MAX_DISCHARGE_POWER, 0, "ems_max_discharge_power", PAYLOAD_REGEX_5_DIGIT, "", "", "", "", UNIT_W, RSCP::eTypeUInt32, 0, false, true },
     { TAG_EMS_REQ_SET_POWER, TAG_EMS_REQ_SET_POWER_MODE, 0, "power_mode: mode", "", "", "", "", "", UNIT_NONE, RSCP::eTypeUChar8, 0, false, true },
     { TAG_EMS_REQ_SET_POWER, TAG_EMS_REQ_SET_POWER_VALUE, 0, "power_mode: value", "", "", "", "", "", UNIT_NONE, RSCP::eTypeInt32, 0, false, true },
-    { TAG_SE_REQ_SET_EP_RESERVE, TAG_SE_PARAM_EP_RESERVE, 0, "reserve_percent", PAYLOAD_REGEX_0_100, "", "", "", "", UNIT_PERCENT, RSCP::eTypeFloat32, -1, false, true },
-    { TAG_SE_REQ_SET_EP_RESERVE, TAG_SE_PARAM_EP_RESERVE_W, 0, "reserve_energy", PAYLOAD_REGEX_5_DIGIT, "", "", "", "", UNIT_WH, RSCP::eTypeFloat32, -1, false, true },
-    { 0, 0, 0, "power_mode", "^auto$|^idle:[0-9]{1,4}$|^charge:[0-9]{1,5}:[0-9]{1,4}$|^discharge:[0-9]{1,5}:[0-9]{1,4}$|^grid_charge:[0-9]{1,5}:[0-9]{1,4}$", "", "", "", "", UNIT_NONE, RSCP::eTypeBool, -1, false, true },
-    { 0, 0, 0, "idle_period", SET_IDLE_PERIOD_REGEX, "", "", "", "", UNIT_NONE, RSCP::eTypeBool, -1, false, true },
-    { 0, TAG_EMS_REQ_SET_BATTERY_TO_CAR_MODE, 0, "wallbox_discharge_battery_to_car", "^true|on|1$", "1", "^false|off|0$", "0", "", UNIT_NONE, RSCP::eTypeUChar8, -1, false, true },
-    { 0, TAG_EMS_REQ_SET_BATTERY_BEFORE_CAR_MODE, 0, "wallbox_charge_battery_before_car", "^true|on|1$", "1", "^false|off|0$", "0", "", UNIT_NONE, RSCP::eTypeUChar8, -1, false, true },
-    { 0, TAG_EMS_REQ_SET_WB_DISCHARGE_BAT_UNTIL, 0, "wallbox_discharge_battery_until", PAYLOAD_REGEX_2_DIGIT, "", "", "", "", UNIT_PERCENT, RSCP::eTypeUChar8, -1, false, true },
-    { 0, TAG_EMS_REQ_SET_WALLBOX_ENFORCE_POWER_ASSIGNMENT, 0, "wallbox_disable_battery_at_mix_mode", "^true|on|1$", "true", "^false|off|0$", "false", "", UNIT_NONE, RSCP::eTypeBool, -1, false, true },
-    { TAG_WB_REQ_DATA, TAG_WB_EXTERN_DATA, 0, "wallbox_sun_mode", "^true|on|1$", "1", "^false|off|0$", "0", "", UNIT_NONE, RSCP::eTypeBool, -1, false, true },
-    { TAG_WB_REQ_DATA, TAG_WB_EXTERN_DATA, 0, "wallbox_toggle", "^true|on|1$", "1", "", "", "", UNIT_NONE, RSCP::eTypeBool, -1, false, true },
-    { TAG_WB_REQ_DATA, TAG_WB_EXTERN_DATA, 0, "wallbox_suspended", "^true|on|1$", "1", "^false|off|0$", "0", "", UNIT_NONE, RSCP::eTypeBool, -1, false, true },
-    { TAG_WB_REQ_DATA, TAG_WB_EXTERN_DATA, 0, "wallbox_max_current", "^[0-9]{1,2}$", "", "", "", "", UNIT_A, RSCP::eTypeUChar8, -1, false, true },
-    { TAG_WB_REQ_DATA, TAG_WB_REQ_SET_NUMBER_PHASES, 0, "wallbox_number_phases", "^1|3$", "", "", "", "", UNIT_NONE, RSCP::eTypeUChar8, -1, false, true },
-    { TAG_WB_REQ_DATA, TAG_WB_REQ_SET_MIN_CHARGE_CURRENT, 0, "wallbox_min_current", "^[0-9]{1,2}$", "", "", "", "", UNIT_A, RSCP::eTypeUChar8, -1, false, true }, // Issue #84
-    { 0, 0, 0, "requests_pm", "^true|on|1$", "true", "^false|off|0$", "false", "", UNIT_NONE, RSCP::eTypeBool, -1, false, true },
-    { 0, 0, 0, "requests_pvi", "^true|on|1$", "true", "^false|off|0$", "false", "", UNIT_NONE, RSCP::eTypeBool, -1, false, true },
-    { 0, 0, 0, "requests_dcb", "^true|on|1$", "true", "^false|off|0$", "false", "", UNIT_NONE, RSCP::eTypeBool, -1, false, true },
-    { 0, 0, 0, "soc_limiter", "^true|on|1$", "true", "^false|off|0$", "false", "", UNIT_NONE, RSCP::eTypeBool, -1, false, true },
-    { 0, 0, 0, "statistic_values", "^true|on|1$", "true", "^false|off|0$", "false", "", UNIT_NONE, RSCP::eTypeBool, -1, false, true },
-    { 0, 0, 0, "daily_values", "^true|on|1$", "true", "^false|off|0$", "false", "", UNIT_NONE, RSCP::eTypeBool, -1, false, true },
-    { 0, 0, 0, "limit_charge_soc", PAYLOAD_REGEX_0_100, "", "", "", "", UNIT_NONE, RSCP::eTypeUChar8, -1, false, true },
-    { 0, 0, 0, "limit_charge_durable", "^true|on|1$", "1", "^false|off|0$", "0", "", UNIT_NONE, RSCP::eTypeUChar8, -1, false, true },
-    { 0, 0, 0, "limit_discharge_soc", PAYLOAD_REGEX_0_100, "", "", "", "", UNIT_NONE, RSCP::eTypeUChar8, -1, false, true },
-    { 0, 0, 0, "limit_discharge_durable", "^true|on|1$", "1", "^false|off|0$", "0", "", UNIT_NONE, RSCP::eTypeUChar8, -1, false, true },
-    { 0, 0, 0, "limit_discharge_by_home_power", PAYLOAD_REGEX_5_DIGIT, "", "", "", "", UNIT_W, RSCP::eTypeUInt32, -1, false, true },
-    { 0, 0, 0, "log", "^true|on|1$", "true", "", "", "", UNIT_NONE, RSCP::eTypeBool, -1, false, true },
-    { 0, 0, 0, "log_cache", "^true|on|1$", "true", "", "", "", UNIT_NONE, RSCP::eTypeBool, -1, false, true },
-    { 0, 0, 0, "log_rcache", "^true|on|1$", "true", "", "", "", UNIT_NONE, RSCP::eTypeBool, -1, false, true },
-    { 0, 0, 0, "log_errors", "^true|on|1$", "true", "", "", "", UNIT_NONE, RSCP::eTypeBool, -1, false, true },
-    { 0, 0, 0, "health", "^true|on|1$", "true", "", "", "", UNIT_NONE, RSCP::eTypeBool, -1, false, true },
-    { 0, 0, 0, "raw_mode", "^true|on|1$", "true", "^false|off|0$", "false", "", UNIT_NONE, RSCP::eTypeBool, -1, false, true },
-    { 0, 0, 0, "force", "[a-zA-z0-9/_.*]*", "", "", "", "", UNIT_NONE, RSCP::eTypeBool, -1, false, true },
-    { 0, 0, 0, "interval", "^[1-9]|[1-9][0-9]|[1-2][0-9][0-9]|300$", "", "", "", "", UNIT_NONE, RSCP::eTypeUChar8, -1, false, true },
-    { 0, 0, 0, "request_day", "^[0-9]{4}-[0-1]?[0-9]-[0-3]?[0-9]$", "", "", "", "", UNIT_NONE, RSCP::eTypeUChar8, -1, true, true }
+    { TAG_SE_REQ_SET_EP_RESERVE, TAG_SE_PARAM_EP_RESERVE, 0, "reserve_percent", PAYLOAD_REGEX_0_100, "", "", "", "", UNIT_PERCENT, RSCP::eTypeFloat32, 0, false, true },
+    { TAG_SE_REQ_SET_EP_RESERVE, TAG_SE_PARAM_EP_RESERVE_W, 0, "reserve_energy", PAYLOAD_REGEX_5_DIGIT, "", "", "", "", UNIT_WH, RSCP::eTypeFloat32, 0, false, true },
+    { 0, 0, 0, "power_mode", "^auto$|^idle:[0-9]{1,4}$|^charge:[0-9]{1,5}:[0-9]{1,4}$|^discharge:[0-9]{1,5}:[0-9]{1,4}$|^grid_charge:[0-9]{1,5}:[0-9]{1,4}$", "", "", "", "", UNIT_NONE, RSCP::eTypeBool, 0, false, true },
+    { 0, 0, 0, "idle_period", SET_IDLE_PERIOD_REGEX, "", "", "", "", UNIT_NONE, RSCP::eTypeBool, 0, false, true },
+    { 0, TAG_EMS_REQ_SET_BATTERY_TO_CAR_MODE, 0, "wallbox_discharge_battery_to_car", "^true|on|1$", "1", "^false|off|0$", "0", "", UNIT_NONE, RSCP::eTypeUChar8, 0, false, true },
+    { 0, TAG_EMS_REQ_SET_BATTERY_BEFORE_CAR_MODE, 0, "wallbox_charge_battery_before_car", "^true|on|1$", "1", "^false|off|0$", "0", "", UNIT_NONE, RSCP::eTypeUChar8, 0, false, true },
+    { 0, TAG_EMS_REQ_SET_WB_DISCHARGE_BAT_UNTIL, 0, "wallbox_discharge_battery_until", PAYLOAD_REGEX_2_DIGIT, "", "", "", "", UNIT_PERCENT, RSCP::eTypeUChar8, 0, false, true },
+    { 0, TAG_EMS_REQ_SET_WALLBOX_ENFORCE_POWER_ASSIGNMENT, 0, "wallbox_disable_battery_at_mix_mode", "^true|on|1$", "true", "^false|off|0$", "false", "", UNIT_NONE, RSCP::eTypeBool, 0, false, true },
+    { TAG_WB_REQ_DATA, TAG_WB_EXTERN_DATA, 0, "wallbox_sun_mode", "^true|on|1$", "1", "^false|off|0$", "0", "", UNIT_NONE, RSCP::eTypeBool, 0, false, true },
+    { TAG_WB_REQ_DATA, TAG_WB_EXTERN_DATA, 0, "wallbox_toggle", "^true|on|1$", "1", "", "", "", UNIT_NONE, RSCP::eTypeBool, 0, false, true },
+    { TAG_WB_REQ_DATA, TAG_WB_EXTERN_DATA, 0, "wallbox_suspended", "^true|on|1$", "1", "^false|off|0$", "0", "", UNIT_NONE, RSCP::eTypeBool, 0, false, true },
+    { TAG_WB_REQ_DATA, TAG_WB_EXTERN_DATA, 0, "wallbox_max_current", "^[0-9]{1,2}$", "", "", "", "", UNIT_A, RSCP::eTypeUChar8, 0, false, true },
+    { TAG_WB_REQ_DATA, TAG_WB_REQ_SET_NUMBER_PHASES, 0, "wallbox_number_phases", "^1|3$", "", "", "", "", UNIT_NONE, RSCP::eTypeUChar8, 0, false, true },
+    { TAG_WB_REQ_DATA, TAG_WB_REQ_SET_MIN_CHARGE_CURRENT, 0, "wallbox_min_current", "^[0-9]{1,2}$", "", "", "", "", UNIT_A, RSCP::eTypeUChar8, 0, false, true }, // Issue #84
+    { 0, 0, 0, "requests_pm", "^true|on|1$", "true", "^false|off|0$", "false", "", UNIT_NONE, RSCP::eTypeBool, 0, false, true },
+    { 0, 0, 0, "requests_pvi", "^true|on|1$", "true", "^false|off|0$", "false", "", UNIT_NONE, RSCP::eTypeBool, 0, false, true },
+    { 0, 0, 0, "requests_dcb", "^true|on|1$", "true", "^false|off|0$", "false", "", UNIT_NONE, RSCP::eTypeBool, 0, false, true },
+    { 0, 0, 0, "soc_limiter", "^true|on|1$", "true", "^false|off|0$", "false", "", UNIT_NONE, RSCP::eTypeBool, 0, false, true },
+    { 0, 0, 0, "statistic_values", "^true|on|1$", "true", "^false|off|0$", "false", "", UNIT_NONE, RSCP::eTypeBool, 0, false, true },
+    { 0, 0, 0, "daily_values", "^true|on|1$", "true", "^false|off|0$", "false", "", UNIT_NONE, RSCP::eTypeBool, 0, false, true },
+    { 0, 0, 0, "limit_charge_soc", PAYLOAD_REGEX_0_100, "", "", "", "", UNIT_NONE, RSCP::eTypeUChar8, 0, false, true },
+    { 0, 0, 0, "limit_charge_durable", "^true|on|1$", "1", "^false|off|0$", "0", "", UNIT_NONE, RSCP::eTypeUChar8, 0, false, true },
+    { 0, 0, 0, "limit_discharge_soc", PAYLOAD_REGEX_0_100, "", "", "", "", UNIT_NONE, RSCP::eTypeUChar8, 0, false, true },
+    { 0, 0, 0, "limit_discharge_durable", "^true|on|1$", "1", "^false|off|0$", "0", "", UNIT_NONE, RSCP::eTypeUChar8, 0, false, true },
+    { 0, 0, 0, "limit_discharge_by_home_power", PAYLOAD_REGEX_5_DIGIT, "", "", "", "", UNIT_W, RSCP::eTypeUInt32, 0, false, true },
+    { 0, 0, 0, "log", "^true|on|1$", "true", "", "", "", UNIT_NONE, RSCP::eTypeBool, 0, false, true },
+    { 0, 0, 0, "log_cache", "^true|on|1$", "true", "", "", "", UNIT_NONE, RSCP::eTypeBool, 0, false, true },
+    { 0, 0, 0, "log_rcache", "^true|on|1$", "true", "", "", "", UNIT_NONE, RSCP::eTypeBool, 0, false, true },
+    { 0, 0, 0, "log_errors", "^true|on|1$", "true", "", "", "", UNIT_NONE, RSCP::eTypeBool, 0, false, true },
+    { 0, 0, 0, "health", "^true|on|1$", "true", "", "", "", UNIT_NONE, RSCP::eTypeBool, 0, false, true },
+    { 0, 0, 0, "raw_mode", "^true|on|1$", "true", "^false|off|0$", "false", "", UNIT_NONE, RSCP::eTypeBool, 0, false, true },
+    { 0, 0, 0, "force", "[a-zA-z0-9/_.*]*", "", "", "", "", UNIT_NONE, RSCP::eTypeBool, 0, false, true },
+    { 0, 0, 0, "interval", "^[1-9]|[1-9][0-9]|[1-2][0-9][0-9]|300$", "", "", "", "", UNIT_NONE, RSCP::eTypeUChar8, 0, false, true },
+    { 0, 0, 0, "request_day", "^[0-9]{4}-[0-1]?[0-9]-[0-3]?[0-9]$", "", "", "", "", UNIT_NONE, RSCP::eTypeUChar8, 0, true, true }
 };
 
 std::vector<rec_cache_t> RscpMqttReceiveCache(rec_cache, rec_cache + sizeof(rec_cache) / sizeof(rec_cache_t));
