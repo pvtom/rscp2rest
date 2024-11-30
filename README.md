@@ -49,7 +49,7 @@ Please follow the [README](https://github.com/pvtom/rscp2mqtt/blob/main/README.m
 
 ## Start Docker Container (HTTPS)
 ```
-docker run --rm -d -e TZ=Europe/Berlin -e E3DC_IP=<ip address> -e E3DC_USER=<user> -e E3DC_PASSWORD=<password> -e E3DC_AES_PASSWORD=<rscp aes password> USE_HTTPS=true -v /path/to/your/server.key:/opt/rscp2rest/server.key -v /path/to/your/server.crt:/opt/rscp2rest/server.crt -p3300:3300 pvtom/rscp2rest:latest
+docker run --rm -d -e TZ=Europe/Berlin -e E3DC_IP=<ip address> -e E3DC_USER=<user> -e E3DC_PASSWORD=<password> -e E3DC_AES_PASSWORD=<rscp aes password> -e USE_HTTPS=true -v /path/to/your/server.key:/opt/rscp2rest/server.key -v /path/to/your/server.crt:/opt/rscp2rest/server.crt -p3300:3300 pvtom/rscp2rest:latest
 ```
 
 ## Keys and Values
