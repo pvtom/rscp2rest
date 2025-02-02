@@ -19,8 +19,8 @@
 #include <mutex>
 #include <fcntl.h>
 
-#define RSCP2P                  "1.3"
-#define RSCP2P_LONG             "1.3.3.31"
+#define RSCP2P                  "1.4"
+#define RSCP2P_LONG             "1.4.3.32"
 
 #define AES_KEY_SIZE            32
 #define AES_BLOCK_SIZE          32
@@ -212,8 +212,7 @@ void fifoListener() {
     while (go) {
         memset(fifo, 0, sizeof(fifo));
         if (fd < 0) fd = open(rfifo, O_RDONLY);
-        read(fd, fifo, 1024);   
-        if (strlen(fifo)) {
+        if (read(fd, fifo, 1024) >= 0) {
             if (sscanf(fifo, "%127[^=]=%127[^\n]", key, value) == 2) {
                 if (!cfg.prefix || (strstr(key, cfg.prefix))) {
                     storeMQTTReceivedValue(RSCP_MQTT::RscpMqttReceiveCache, key, value);
@@ -811,6 +810,18 @@ void addPrefix(std::vector<RSCP_MQTT::cache_t> & v, char *prefix) {
         }
     }
     return;
+}
+
+// Issue #9
+void correctExternalPM(std::vector<RSCP_MQTT::cache_t> & v, int pm, char *unit, int divisor) {
+    for (std::vector<RSCP_MQTT::cache_t>::iterator it = v.begin(); it != v.end(); ++it) {
+        if (((pm == 0) && (it->tag == TAG_DB_PM_0_POWER)) || ((pm == 1) && (it->tag == TAG_DB_PM_1_POWER))) {
+            if (unit && (!strcmp(unit, UNIT_KWH) || !strcmp(unit, UNIT_WH))) strcpy(it->unit, unit);
+            if ((divisor == 1) || (divisor == 1000)) it->divisor = divisor;
+            if (cfg.verbose) logMessage(cfg.logfile, (char *)__FILE__, __LINE__, (char *)"correctExternalPM pm %d unit >%s< divisor %d topic >%s<\n", pm, it->unit, it->divisor, it->topic);
+        }
+    }
+    return; 
 }
 
 int handleImmediately(RscpProtocol *protocol, SRscpValue *response, uint32_t container, int year, int month, int day) {
@@ -1983,7 +1994,10 @@ void handleRaw(RscpProtocol *protocol, SRscpValue *response, uint32_t *cache, in
     if (response->dataType == RSCP::eTypeError) return;
 
     if (!l && (response->dataType != RSCP::eTypeContainer)) {
-        snprintf(topic, TOPIC_SIZE, "raw/%s", tagName(RSCP_TAGS::RscpTagsOverview, response->tag));
+        if (snprintf(topic, TOPIC_SIZE, "raw/%s", tagName(RSCP_TAGS::RscpTagsOverview, response->tag)) >= TOPIC_SIZE) {
+            logMessage(cfg.logfile, (char *)__FILE__, __LINE__, (char *)"handleRaw: Buffer overflow\n");
+            return;
+        }
         if (!cfg.raw_topic_regex || std::regex_match(topic, std::regex(cfg.raw_topic_regex))) publishRaw(protocol, response, topic);
         return;
     }
@@ -2825,6 +2839,19 @@ int main(int argc, char *argv[]) {
                 cfg.raw_mode = true;
             else if (strcasecmp(key, "RAW_TOPIC_REGEX") == 0)
                 cfg.raw_topic_regex = strdup(value);
+// Issue #9 
+            else if (strcasecmp(key, "CORRECT_PM_0_UNIT") == 0) {
+                correctExternalPM(RSCP_MQTT::RscpMqttCache, 0, value, 0);
+            }
+            else if (strcasecmp(key, "CORRECT_PM_0_DIVISOR") == 0) {
+                correctExternalPM(RSCP_MQTT::RscpMqttCache, 0, NULL, atoi(value));
+            }
+            else if (strcasecmp(key, "CORRECT_PM_1_UNIT") == 0) {
+                correctExternalPM(RSCP_MQTT::RscpMqttCache, 1, value, 0);
+            }
+            else if (strcasecmp(key, "CORRECT_PM_1_DIVISOR") == 0) {
+                correctExternalPM(RSCP_MQTT::RscpMqttCache, 1, NULL, atoi(value));
+            }
             else if (strncasecmp(key, "ADD_NEW_REQUEST", strlen("ADD_NEW_REQUEST")) == 0) {
                 int order = 0;
                 int index = -1;

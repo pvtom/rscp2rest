@@ -121,6 +121,8 @@
 | Historical Data Battery Energy Charge | day_<year#>_<month#>_<day#>_battery_energy_charge | [kWh] |
 | Historical Data Consumed Production | day_<year#>_<month#>_<day#>_consumed | [%] |
 | Historical Data Energy Discharge | day_<year#>_<month#>_<day#>_battery_energy_discharge | [kWh] |
+| Historical Data External PM 0 Energy | day_<year#>_<month#>_<day#>_pm_0_energy | [kWh] |
+| Historical Data External PM 1 Energy | day_<year#>_<month#>_<day#>_pm_1_energy | [kWh] |
 | Historical Data Grid In Energy "Einspeisung" | day_<year#>_<month#>_<day#>_grid_energy_in | [kWh] |
 | Historical Data Grid Out Energy "Netzbezug" | day_<year#>_<month#>_<day#>_grid_energy_out | [kWh] |
 | Historical Data Home Energy | day_<year#>_<month#>_<day#>_home_energy | [kWh] | 
@@ -131,6 +133,8 @@
 | Month Battery Energy Charge | month_battery_energy_charge | [kWh] |
 | Month Consumed Production | month_consumed | [%] |
 | Month Energy Discharge | month_battery_energy_discharge | [kWh] |
+| Month External PM 0 Energy | month_pm_0_energy | [kWh] |
+| Month External PM 1 Energy | month_pm_1_energy | [kWh] |
 | Month Grid In Energy "Einspeisung" | month_grid_energy_in | [kWh] |
 | Month Grid Out Energy "Netzbezug" | month_grid_energy_out | [kWh] |
 | Month Home Energy | month_home_energy | [kWh] |
@@ -139,6 +143,8 @@
 | PM Active Phase L2 | pm_active_phases_L2 | (true/false) |
 | PM Active Phase L3 | pm_active_phases_L3 | (true/false) |
 | PM Energy | pm_energy | [kWh] |
+| PM Energy External 0 | pm_0_energy | [kWh] |
+| PM Energy External 1 | pm_1_energy | [kWh] |
 | PM Energy L1 | pm_energy_L1 | [kWh] |
 | PM Energy L2 | pm_energy_L2 | [kWh] |
 | PM Energy L3 | pm_energy_L3 | [kWh] |
@@ -255,6 +261,8 @@
 | Week Battery Energy Charge | week_battery_energy_charge | [kWh] |
 | Week Consumed Production | week_consumed | [%] |
 | Week Energy Discharge | week_battery_energy_discharge | [kWh] |
+| Week External PM 0 Energy | week_pm_0_energy | [kWh] |
+| Week External PM 1 Energy | week_pm_1_energy | [kWh] |
 | Week Grid In Energy "Einspeisung" | week_grid_energy_in | [kWh] |
 | Week Grid Out Energy "Netzbezug" | week_grid_energy_out | [kWh] |
 | Week Home Energy | week_home_energy | [kWh] |
@@ -263,12 +271,16 @@
 | Year Battery Energy Charge | year_battery_energy_charge | [kWh] |
 | Year Consumed Production | year_consumed | [%] |
 | Year Energy Discharge | year_battery_energy_discharge | [kWh] |
+| Year External PM 0 Energy | year_pm_0_energy | [kWh] |
+| Year External PM 1 Energy | year_pm_1_energy | [kWh] |
 | Year Grid In Energy "Einspeisung" | year_grid_energy_in | [kWh] |
 | Year Grid Out Energy "Netzbezug" | year_grid_energy_out | [kWh] |
 | Year History Autarky | history_<year#>_autarky | [%] |
 | Year History Battery Energy Charge | history_<year#>_battery_energy_charge | [kWh] |
 | Year History Consumed Production | history_<year#>_consumed | [%] |
 | Year History Energy Discharge | history_<year#>_battery_energy_discharge | [kWh] |
+| Year History External PM 0 Energy | history_<year#>_pm_0_energy | [kWh] |
+| Year History External PM 1 Energy | history_<year#>_pm_1_energy | [kWh] |
 | Year History Grid In Energy "Einspeisung" | history_<year#>_grid_energy_in | [kWh] |
 | Year History Grid Out Energy "Netzbezug" | history_<year#>_grid_energy_out | [kWh] |
 | Year History Home Energy | history_<year#>_home_energy | [kWh] |
@@ -280,6 +292,8 @@
 | Yesterday Battery SOC | yesterday_battery_rsoc | [%] |
 | Yesterday Consumed Production | yesterday_consumed | [%] |
 | Yesterday Energy Discharge | yesterday_battery_energy_discharge | [kWh] |
+| Yesterday External PM 0 Energy | yesterday_pm_0_energy | [kWh] |
+| Yesterday External PM 1 Energy | yesterday_pm_1_energy | [kWh] |
 | Yesterday Grid In Energy "Einspeisung" | yesterday_grid_energy_in | [kWh] |
 | Yesterday Grid Out Energy "Netzbezug" | yesterday_grid_energy_out | [kWh] |
 | Yesterday Home Energy | yesterday_home_energy | [kWh] |
