@@ -19,8 +19,8 @@
 #include <mutex>
 #include <fcntl.h>
 
-#define RSCP2P                  "1.4"
-#define RSCP2P_LONG             "1.4.3.32"
+#define RSCP2P                  "1.5"
+#define RSCP2P_LONG             "1.5.3.33"
 
 #define AES_KEY_SIZE            32
 #define AES_BLOCK_SIZE          32
