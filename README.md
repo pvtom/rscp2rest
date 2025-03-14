@@ -37,6 +37,7 @@ PVI_TRACKER
 BATTERY_STRINGS
 HISTORY_START_YEAR
 USE_HTTPS
+VERBOSE
 ```
 
 Or start the container with an existing .config file
