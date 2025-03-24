@@ -43,7 +43,7 @@ VERBOSE
 Or start the container with an existing .config file
 
 ```
-docker run --rm -d -e TZ=Europe/Berlin -v /path/to/your/.config:/opt/rscp2p/.config -p3300:3300 pvtom/rscp2rest:latest
+docker run --rm -d -e TZ=Europe/Berlin -v /path/to/your/.config:/opt/rscp2rest/.config -p3300:3300 pvtom/rscp2rest:latest
 ```
 
 Please follow the [README](https://github.com/pvtom/rscp2mqtt/blob/main/README.md#configuration) of rscp2mqtt to create a .config file and take a look at the [template](config.template).
