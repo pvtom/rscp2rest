@@ -19,8 +19,8 @@
 #include <mutex>
 #include <fcntl.h>
 
-#define RSCP2P                  "1.8"
-#define RSCP2P_LONG             "1.8.3.36"
+#define RSCP2P                  "1.9"
+#define RSCP2P_LONG             "1.9.3.37"
 
 #define AES_KEY_SIZE            32
 #define AES_BLOCK_SIZE          32
@@ -116,7 +116,13 @@ char *tagName(std::vector<RSCP_TAGS::tag_overview_t> & v, uint32_t tag) {
             return(it->name);
         }
     }
-    return(NULL); 
+    char name[128];
+    sprintf(name, "0x%02X", tag);
+    RSCP_TAGS::tag_overview_t tag_overview = { tag, "", 0 };
+    strcpy(tag_overview.name, name);
+    RSCP_TAGS::RscpTagsOverview.push_back(tag_overview);
+    logMessage(cfg.logfile, (char *)__FILE__, __LINE__, (char *)"tagName: new tag >%s<\n", name);
+    return(tagName(v, tag));
 }
 
 uint32_t tagID(std::vector<RSCP_TAGS::tag_overview_t> & v, char *name) {
@@ -138,12 +144,14 @@ bool isTag(std::vector<RSCP_TAGS::tag_overview_t> & v, char *name, bool must_be_
 }
 
 char *typeName(std::vector<RSCP_TAGS::rscp_types_t> & v, uint8_t code) {
+    char *unknown = NULL;
     for (std::vector<RSCP_TAGS::rscp_types_t>::iterator it = v.begin(); it != v.end(); ++it) {
+        if (!it->code) unknown = it->type;
         if (it->code == code) {
             return(it->type);
         }
     }
-    return(NULL);
+    return(unknown);
 }
 
 uint8_t typeID(std::vector<RSCP_TAGS::rscp_types_t> & v, char *type) {
@@ -753,7 +761,7 @@ int mergeRawData(char *topic, char *payload, bool *changed) {
             if (!strcmp(it->topic, topic) && !it->handled && (i == it->nr)) {
                 if (strcmp(it->payload, payload)) {
                     if (strlen(it->payload) != strlen(payload)) it->payload = (char *)realloc(it->payload, strlen(payload) + 1);
-                    strcpy(it->payload, payload);
+                    if (it->payload) strcpy(it->payload, payload);
                     it->changed = true;
                     *changed = true;
                 }
@@ -1973,18 +1981,20 @@ void publishRaw(RscpProtocol *protocol, SRscpValue *response, char *topic_in) {
     char topic[TOPIC_SIZE];
     char *payload = (char *)malloc(PAYLOAD_SIZE * sizeof(char) + 1);
     bool changed = false;
-    memset(payload, 0, PAYLOAD_SIZE);
-    preparePayload(protocol, response, &payload);
+    if (payload) {
+        memset(payload, 0, PAYLOAD_SIZE);
+        preparePayload(protocol, response, &payload);
     
-    int nr = mergeRawData(topic_in, payload, &changed);
-    if (nr > 0) {
-        if (snprintf(topic, TOPIC_SIZE, "%s/%d", topic_in, nr) >= TOPIC_SIZE) {
-            logMessage(cfg.logfile, (char *)__FILE__, __LINE__, (char *)"publishRaw: Buffer overflow\n");
-            return;
-        }
-        if (changed) publishImmediately(topic, payload);
-    } else if (changed) publishImmediately(topic_in, payload);
-    if (payload) free(payload);
+        int nr = mergeRawData(topic_in, payload, &changed);
+        if (nr > 0) {
+            if (snprintf(topic, TOPIC_SIZE, "%s/%d", topic_in, nr) >= TOPIC_SIZE) {
+                logMessage(cfg.logfile, (char *)__FILE__, __LINE__, (char *)"publishRaw: Buffer overflow\n");
+                return;
+            }
+            if (changed) publishImmediately(topic, payload);
+        } else if (changed) publishImmediately(topic_in, payload);
+        free(payload);
+    }
     return;
 }
 
@@ -2173,6 +2183,7 @@ int handleResponseValue(RscpProtocol *protocol, SRscpValue *response) {
                                             if (storeResponseValue(RSCP_MQTT::RscpMqttCache, protocol, &(subcontainer[k]), containerData[i].tag, dcb_nr) < 0) break;
                                         }
                                     }
+                                    protocol->destroyValueData(subcontainer); // Issue #107
                                 }
                             }
                         }
@@ -3206,6 +3217,11 @@ int main(int argc, char *argv[]) {
         logMessageCache(cfg.logfile, false);
     }
 
+    for (std::vector<RSCP_MQTT::raw_data_t>::iterator it = RSCP_MQTT::rawData.begin(); it != RSCP_MQTT::rawData.end(); ++it) {
+        if (it->topic) free(it->topic);
+        if (it->payload) free(it->payload);
+    }
+
     RSCP_MQTT::RscpMqttCache.clear();
     RSCP_MQTT::RscpMqttCacheTempl.clear();
     RSCP_MQTT::RscpMqttReceiveCache.clear();
@@ -3215,6 +3231,7 @@ int main(int argc, char *argv[]) {
     RSCP_MQTT::TopicStore.clear();
     RSCP_MQTT::IdlePeriodCache.clear();
     RSCP_MQTT::ErrorCache.clear();
+    RSCP_MQTT::rawData.clear();
 
     if (cfg.logfile) free(cfg.logfile);
     if (cfg.historyfile) free(cfg.historyfile);
