@@ -19,8 +19,8 @@
 #include <mutex>
 #include <fcntl.h>
 
-#define RSCP2P                  "1.9"
-#define RSCP2P_LONG             "1.9.3.37"
+#define RSCP2P                  "1.10"
+#define RSCP2P_LONG             "1.10.3.38"
 
 #define AES_KEY_SIZE            32
 #define AES_BLOCK_SIZE          32
@@ -1005,8 +1005,8 @@ int storeResponseValue(std::vector<RSCP_MQTT::cache_t> & c, RscpProtocol *protoc
         if ((!it->container || (it->container == container)) && (it->tag == response->tag) && (it->index == index) && !it->handled) {
             switch (response->dataType) {
                 case RSCP::eTypeBool: {
-                    if (protocol->getValueAsBool(response)) strcpy(buf, "true");
-                    else strcpy(buf, "false");
+                    if (protocol->getValueAsBool(response)) strcpy(buf, cfg.true_value);
+                    else strcpy(buf, cfg.false_value);
                     if (strcmp(it->payload, buf)) {
                         strcpy(it->payload, buf);
                         it->changed = true;
@@ -2714,7 +2714,7 @@ static void mainLoop(void) {
     return;
 }
 
-int main(int argc, char *argv[]) {
+int main(int argc, char *argv[], char *envp[]) {
     char key[128], value[128], line[256];
     char *cfile = NULL;
     char *env = NULL;
@@ -2743,8 +2743,7 @@ int main(int argc, char *argv[]) {
     if (cfile) fp = fopen(cfile, "r");
     else fp = fopen(CONFIG_FILE, "r");
     if (!fp) {
-        printf("Config file %s not found. Program terminated.\n", cfile?cfile:CONFIG_FILE);
-        exit(EXIT_FAILURE);
+        printf("Config file %s not found.\n", cfile?cfile:CONFIG_FILE);
     }
 
     time_t rawtime;
@@ -2801,76 +2800,217 @@ int main(int argc, char *argv[]) {
 
     RSCP_MQTT::topic_store_t store = { 0, "" };
 
-    bool skip = false;
-    while (fgets(line, sizeof(line), fp)) {
-        if (!strncmp(line, "EXIT", 4)) break;
-        if (!strncmp(line, "/*", 2)) skip = true;
-        if (!strncmp(line, "*/", 2)) skip = false;
-        if (skip) continue;
-        memset(key, 0, sizeof(key));
-        memset(value, 0, sizeof(value));
-        if (sscanf(line, "%127[^ \t=]=%127[^\n]", key, value) == 2) {
-            if (strcasecmp(key, "E3DC_IP") == 0)
-                strcpy(cfg.e3dc_ip, value);
-            else if (strcasecmp(key, "E3DC_PORT") == 0)
-                cfg.e3dc_port = atoi(value);
-            else if (strcasecmp(key, "E3DC_USER") == 0)
-                strcpy(cfg.e3dc_user, value);
-            else if (strcasecmp(key, "E3DC_PASSWORD") == 0)
-                strcpy(cfg.e3dc_password, value);
-            else if (strcasecmp(key, "E3DC_AES_PASSWORD") == 0)
-                strcpy(cfg.aes_password, value);
-            else if (strcasecmp(key, "PREFIX") == 0)
-                cfg.prefix = strdup(value);
-            else if (strcasecmp(key, "HISTORY_START_YEAR") == 0)
-                cfg.history_start_year = atoi(value);
-            else if (strcasecmp(key, "LOGFILE") == 0) {
-                cfg.logfile = strdup(value);
-            } else if ((strcasecmp(key, "LOG_MODE") == 0) && (strcasecmp(value, "ON") == 0)) {
-                cfg.log_level = 1;
-            } else if ((strcasecmp(key, "LOG_MODE") == 0) && (strcasecmp(value, "BUFFERED") == 0)) {
-                cfg.log_level = 2;
-            } else if (strcasecmp(key, "LOG_LEVEL") == 0)
-                cfg.log_level = atoi(value);
-            else if (strcasecmp(key, "TOPIC_LOG_FILE") == 0) {
-                cfg.historyfile = strdup(value);
-            } else if (strcasecmp(key, "INTERVAL") == 0)
-                cfg.interval = atoi(value);
-            else if ((strcasecmp(key, "VERBOSE") == 0) && (strcasecmp(value, "true") == 0))
-                cfg.verbose = true;
-            else if ((strcasecmp(key, "PVI_REQUESTS") == 0) && (strcasecmp(value, "false") == 0))
-                cfg.pvi_requests = false;
-            else if (strcasecmp(key, "PVI_TRACKER") == 0)
-                cfg.pvi_tracker = atoi(value);
-            else if (strcasecmp(key, "BATTERY_STRINGS") == 0)
-                cfg.battery_strings = atoi(value);
-            else if ((strcasecmp(key, "PM_EXTERN") == 0) && (strcasecmp(value, "true") == 0))
-                cfg.pm_extern = true;
-            else if (strcasecmp(key, "PM_INDEX") == 0) {
+    if (fp) {
+        bool skip = false;
+        while (fgets(line, sizeof(line), fp)) {
+            if (!strncmp(line, "EXIT", 4)) break;
+            if (!strncmp(line, "/*", 2)) skip = true;
+            if (!strncmp(line, "*/", 2)) skip = false;
+            if (skip) continue;
+            memset(key, 0, sizeof(key));
+            memset(value, 0, sizeof(value));
+            if (sscanf(line, "%127[^ \t=]=%127[^\n]", key, value) == 2) {
+                if (strcasecmp(key, "E3DC_IP") == 0)
+                    strcpy(cfg.e3dc_ip, value);
+                else if (strcasecmp(key, "E3DC_PORT") == 0)
+                    cfg.e3dc_port = atoi(value);
+                else if (strcasecmp(key, "E3DC_USER") == 0)
+                    strcpy(cfg.e3dc_user, value);
+                else if (strcasecmp(key, "E3DC_PASSWORD") == 0)
+                    strcpy(cfg.e3dc_password, value);
+                else if (strcasecmp(key, "E3DC_AES_PASSWORD") == 0)
+                    strcpy(cfg.aes_password, value);
+                else if (strcasecmp(key, "PREFIX") == 0)
+                    cfg.prefix = strdup(value);
+                else if (strcasecmp(key, "HISTORY_START_YEAR") == 0)
+                    cfg.history_start_year = atoi(value);
+                else if (strcasecmp(key, "LOGFILE") == 0) {
+                    cfg.logfile = strdup(value);
+                } else if ((strcasecmp(key, "LOG_MODE") == 0) && (strcasecmp(value, "ON") == 0)) {
+                    cfg.log_level = 1;
+                } else if ((strcasecmp(key, "LOG_MODE") == 0) && (strcasecmp(value, "BUFFERED") == 0)) {
+                    cfg.log_level = 2;
+                } else if (strcasecmp(key, "LOG_LEVEL") == 0)
+                    cfg.log_level = atoi(value);
+                else if (strcasecmp(key, "TOPIC_LOG_FILE") == 0) {
+                    cfg.historyfile = strdup(value);
+                } else if (strcasecmp(key, "INTERVAL") == 0)
+                    cfg.interval = atoi(value);
+                else if ((strcasecmp(key, "VERBOSE") == 0) && (strcasecmp(value, "true") == 0))
+                    cfg.verbose = true;
+                else if ((strcasecmp(key, "PVI_REQUESTS") == 0) && (strcasecmp(value, "false") == 0))
+                    cfg.pvi_requests = false;
+                else if (strcasecmp(key, "PVI_TRACKER") == 0)
+                    cfg.pvi_tracker = atoi(value);
+                else if (strcasecmp(key, "BATTERY_STRINGS") == 0)
+                    cfg.battery_strings = atoi(value);
+                else if ((strcasecmp(key, "PM_EXTERN") == 0) && (strcasecmp(value, "true") == 0))
+                    cfg.pm_extern = true;
+                else if (strcasecmp(key, "PM_INDEX") == 0) {
+                    if ((cfg.pm_number < MAX_PM_COUNT) && (atoi(value) >= 0) && (atoi(value) <= 127)) cfg.pm_indexes[cfg.pm_number++] = atoi(value);
+                } else if (strcasecmp(key, "WB_INDEX") == 0) {
+                    if ((cfg.wb_number < MAX_WB_COUNT) && (atoi(value) >= 0) && (atoi(value) < MAX_WB_COUNT)) cfg.wb_indexes[cfg.wb_number++] = atoi(value);
+                } else if (strcasecmp(key, "DCB_CELL_VOLTAGES") == 0) {
+                    if ((atoi(value) >= 0) && (atoi(value) <= 99)) cfg.bat_dcb_cell_voltages = atoi(value);
+                } else if (strcasecmp(key, "DCB_CELL_TEMPERATURES") == 0) {
+                    if ((atoi(value) >= 0) && (atoi(value) <= 99)) cfg.bat_dcb_cell_temperatures = atoi(value);
+                } else if ((strcasecmp(key, "PM_REQUESTS") == 0) && (strcasecmp(value, "false") == 0))
+                    cfg.pm_requests = false;
+                else if ((strcasecmp(key, "EMS_REQUESTS") == 0) && (strcasecmp(value, "false") == 0))
+                    cfg.ems_requests = false;
+                else if ((strcasecmp(key, "HST_REQUESTS") == 0) && (strcasecmp(value, "false") == 0))
+                    cfg.hst_requests = false;
+                else if ((strcasecmp(key, "DCB_REQUESTS") == 0) && (strcasecmp(value, "false") == 0))
+                    cfg.dcb_requests = false;
+                else if ((strcasecmp(key, "SOC_LIMITER") == 0) && (strcasecmp(value, "true") == 0))
+                    cfg.soc_limiter = true;
+                else if ((strcasecmp(key, "DAILY_VALUES") == 0) && (strcasecmp(value, "false") == 0))
+                    cfg.daily_values = false;
+                else if ((strcasecmp(key, "STATISTIC_VALUES") == 0) && (strcasecmp(value, "false") == 0))
+                    cfg.statistic_values = false;
+                else if ((strcasecmp(key, "WALLBOX") == 0) && (strcasecmp(value, "true") == 0))
+                    cfg.wallbox = true;
+                else if ((strcasecmp(key, "LIMIT_CHARGE_SOC") == 0) && (atoi(value) >= 0) && (atoi(value) <= 100))
+                    storeIntegerValue(RSCP_MQTT::RscpMqttCache, 0, 0, atoi(value), IDX_LIMIT_CHARGE_SOC, true);
+                else if ((strcasecmp(key, "LIMIT_DISCHARGE_SOC") == 0) && (atoi(value) >= 0) && (atoi(value) <= 100))
+                    storeIntegerValue(RSCP_MQTT::RscpMqttCache, 0, 0, atoi(value), IDX_LIMIT_DISCHARGE_SOC, true);
+                else if ((strcasecmp(key, "LIMIT_CHARGE_DURABLE") == 0) && (strcasecmp(value, "true") == 0))
+                    storeIntegerValue(RSCP_MQTT::RscpMqttCache, 0, 0, 1, IDX_LIMIT_CHARGE_DURABLE, true);
+                else if ((strcasecmp(key, "LIMIT_DISCHARGE_DURABLE") == 0) && (strcasecmp(value, "true") == 0))
+                    storeIntegerValue(RSCP_MQTT::RscpMqttCache, 0, 0, 1, IDX_LIMIT_DISCHARGE_DURABLE, true);
+                else if ((strcasecmp(key, "LIMIT_DISCHARGE_BY_HOME_POWER") == 0) && (atoi(value) >= 0) && (atoi(value) <= 99999))
+                    storeIntegerValue(RSCP_MQTT::RscpMqttCache, 0, 0, atoi(value), IDX_LIMIT_DISCHARGE_BY_HOME_POWER, true);
+                else if ((strcasecmp(key, "AUTO_REFRESH") == 0) && (strcasecmp(value, "true") == 0))
+                    cfg.auto_refresh = true;
+                else if ((strcasecmp(key, "USE_TRUE_FALSE") == 0) && (strcasecmp(value, "false") == 0)) {
+                    strcpy(cfg.true_value, "1");
+                    strcpy(cfg.false_value, "0");
+                } else if (strcasecmp(key, "FORCE_PUB") == 0) {
+                    store.type = FORCED_TOPIC;
+                    strcpy(store.topic, value);
+                    RSCP_MQTT::TopicStore.push_back(store);
+                }
+                else if (strcasecmp(key, "TOPIC_LOG") == 0) {
+                    store.type = LOG_TOPIC;
+                    strcpy(store.topic, value);
+                    RSCP_MQTT::TopicStore.push_back(store);
+                }
+                else if ((strcasecmp(key, "RAW_MODE") == 0) && (strcasecmp(value, "true") == 0))
+                    cfg.raw_mode = true;
+                else if (strcasecmp(key, "RAW_TOPIC_REGEX") == 0)
+                    cfg.raw_topic_regex = strdup(value);
+// Issue #9 
+                else if (strcasecmp(key, "CORRECT_PM_0_UNIT") == 0) {
+                    correctExternalPM(RSCP_MQTT::RscpMqttCache, 0, value, 0);
+                }
+                else if (strcasecmp(key, "CORRECT_PM_0_DIVISOR") == 0) {
+                    correctExternalPM(RSCP_MQTT::RscpMqttCache, 0, NULL, atoi(value));
+                }
+                else if (strcasecmp(key, "CORRECT_PM_1_UNIT") == 0) {
+                    correctExternalPM(RSCP_MQTT::RscpMqttCache, 1, value, 0);
+                }
+                else if (strcasecmp(key, "CORRECT_PM_1_DIVISOR") == 0) {
+                    correctExternalPM(RSCP_MQTT::RscpMqttCache, 1, NULL, atoi(value));
+                }
+                else if (strncasecmp(key, "ADD_NEW_REQUEST", strlen("ADD_NEW_REQUEST")) == 0) {
+                    int order = 0;
+                    int index = -1;
+                    char container[128];
+                    char tag[128];
+                    bool one_shot = false;
+                    memset(container, 0, sizeof(container));
+                    memset(tag, 0, sizeof(tag));
+                    if (!strcasecmp(key, "ADD_NEW_REQUEST_AT_START")) one_shot = true;
+                    if ((sscanf(value, "%127[^:-]:%127[^:-]:%d-%d", container, tag, &index, &order) == 4) || (sscanf(value, "%127[^:-]:%127[^:-]-%d", container, tag, &order) == 3)) {
+                        if (isTag(RSCP_TAGS::RscpTagsOverview, container, true) && isTag(RSCP_TAGS::RscpTagsOverview, tag, false)) pushAdditionalTag(tagID(RSCP_TAGS::RscpTagsOverview, container), tagID(RSCP_TAGS::RscpTagsOverview, tag), index, order, one_shot);
+                    } else logMessage(cfg.logfile, (char *)__FILE__, __LINE__, (char *)"key >%s< value >%s< not enough attributes.\n", key, value);
+                }
+                else if (strcasecmp(key, "ADD_NEW_TOPIC") == 0) {
+                    int divisor = 1;
+                    int bit = 1;
+                    int index = 0;
+                    char container[128];
+                    char tag[128];
+                    char topic[TOPIC_SIZE];
+                    char unit[128];
+                    memset(container, 0, sizeof(container));
+                    memset(tag, 0, sizeof(tag));
+                    memset(topic, 0, sizeof(topic));
+                    memset(unit, 0, sizeof(unit));
+                    if ((sscanf(value, "%127[^:]:%127[^:]:%d:%127[^:]:%d:%d:%127[^:]", container, tag, &index, unit, &divisor, &bit, topic) == 7) ||
+                        (sscanf(value, "%127[^:]:%127[^:]:%127[^:]:%d:%d:%127[^:]", container, tag, unit, &divisor, &bit, topic) == 6)) {
+                        if (isTag(RSCP_TAGS::RscpTagsOverview, container, false) && isTag(RSCP_TAGS::RscpTagsOverview, tag, false)) addTopic(tagID(RSCP_TAGS::RscpTagsOverview, container), tagID(RSCP_TAGS::RscpTagsOverview, tag), index, topic, unit, F_AUTO, divisor, bit, true);
+                    } else logMessage(cfg.logfile, (char *)__FILE__, __LINE__, (char *)"key >%s< value >%s< not enough attributes.\n", key, value);
+                }
+                else if (strcasecmp(key, "ADD_NEW_SET_TOPIC") == 0) {
+                    char container[128];
+                    char tag[128];
+                    int index = 0;
+                    char topic[TOPIC_SIZE];
+                    char regex_true[128];
+                    char value_true[128];
+                    char regex_false[128];
+                    char value_false[128];
+                    char type[128];
+                    memset(container, 0, sizeof(container));
+                    memset(tag, 0, sizeof(tag));
+                    memset(topic, 0, sizeof(topic));
+                    memset(regex_true, 0, sizeof(regex_true));
+                    memset(value_true, 0, sizeof(value_true));
+                    memset(regex_false, 0, sizeof(regex_false));
+                    memset(value_false, 0, sizeof(value_false));
+                    memset(type, 0, sizeof(type));
+                    if ((sscanf(value, "%127[^:#]:%127[^:#]:%d:%127[^:#]:%127[^:#]:%127[^:#]:%127[^:#]:%127[^:#]#%127[^:#]", container, tag, &index, topic, regex_true, value_true, regex_false, value_false, type) == 9) || (sscanf(value, "%127[^:#]:%127[^:#]:%d:%127[^:#]:%127[^:#]#%127[^:#]", container, tag, &index, topic, regex_true, type) == 6)) {
+                        if (isTag(RSCP_TAGS::RscpTagsOverview, container, false) && isTag(RSCP_TAGS::RscpTagsOverview, tag, false) && (index >= 0)) addSetTopic(tagID(RSCP_TAGS::RscpTagsOverview, container), tagID(RSCP_TAGS::RscpTagsOverview, tag), index, topic, regex_true, value_true, regex_false, value_false, typeID(RSCP_TAGS::RscpTypeNames, type), true);
+                    } else {
+                        logMessage(cfg.logfile, (char *)__FILE__, __LINE__, (char *)"key >%s< value >%s< not enough attributes.\n", key, value);
+                    }
+                }
+            }
+        }
+        fclose(fp);
+    }
+
+    // Overwrite with environment parameters
+    ENV_STRING("E3DC_IP", cfg.e3dc_ip);
+    ENV_INT_RANGE("E3DC_PORT", cfg.e3dc_port, 0, 65535);
+    ENV_STRING("E3DC_USER", cfg.e3dc_user);
+    ENV_STRING("E3DC_PASSWORD", cfg.e3dc_password);
+    ENV_STRING("E3DC_AES_PASSWORD", cfg.aes_password);
+    ENV_STRING_N("PREFIX", cfg.prefix, 24);
+    ENV_INT("HISTORY_START_YEAR", cfg.history_start_year);
+    ENV_INT("INTERVAL", cfg.interval);
+    ENV_BOOL("RAW_MODE", cfg.raw_mode);
+    ENV_STRING("RAW_TOPIC_REGEX", cfg.raw_topic_regex);
+    ENV_BOOL("WALLBOX", cfg.wallbox);
+    ENV_BOOL("VERBOSE", cfg.verbose);
+    ENV_INT("PVI_TRACKER", cfg.pvi_tracker);
+    ENV_INT("BATTERY_STRINGS", cfg.battery_strings);
+    ENV_BOOL("PM_REQUESTS", cfg.pm_requests);
+    ENV_BOOL("EMS_REQUESTS", cfg.ems_requests);
+    ENV_BOOL("HST_REQUESTS", cfg.hst_requests);
+    ENV_BOOL("DCB_REQUESTS", cfg.dcb_requests);
+    ENV_BOOL("SOC_LIMITER", cfg.soc_limiter);
+    ENV_BOOL("DAILY_VALUES", cfg.daily_values);
+    ENV_BOOL("STATISTIC_VALUES", cfg.statistic_values);
+    ENV_BOOL("AUTO_REFRESH", cfg.auto_refresh);
+    ENV_BOOL("RETAIN_FOR_SETUP", cfg.store_setup);
+    ENV_BOOL("PM_EXTERN", cfg.pm_extern);
+
+    for (i = 0; envp[i] != NULL; i++) {
+        if (sscanf(envp[i], "%127[^ \t=]=%127[^\n]", key, value) == 2) {
+            if (strcasestr(key, "FORCE_PUB")) {
+                store.type = FORCED_TOPIC;
+                strcpy(store.topic, value);
+                RSCP_MQTT::TopicStore.push_back(store);
+            } else if (strcasestr(key, "PM_INDEX")) {
                 if ((cfg.pm_number < MAX_PM_COUNT) && (atoi(value) >= 0) && (atoi(value) <= 127)) cfg.pm_indexes[cfg.pm_number++] = atoi(value);
-            } else if (strcasecmp(key, "WB_INDEX") == 0) {
+            } else if (strcasestr(key, "WB_INDEX")) {
                 if ((cfg.wb_number < MAX_WB_COUNT) && (atoi(value) >= 0) && (atoi(value) < MAX_WB_COUNT)) cfg.wb_indexes[cfg.wb_number++] = atoi(value);
-            } else if (strcasecmp(key, "DCB_CELL_VOLTAGES") == 0) {
-                if ((atoi(value) >= 0) && (atoi(value) <= 99)) cfg.bat_dcb_cell_voltages = atoi(value);
-            } else if (strcasecmp(key, "DCB_CELL_TEMPERATURES") == 0) {
-                if ((atoi(value) >= 0) && (atoi(value) <= 99)) cfg.bat_dcb_cell_temperatures = atoi(value);
-            } else if ((strcasecmp(key, "PM_REQUESTS") == 0) && (strcasecmp(value, "false") == 0))
-                cfg.pm_requests = false;
-            else if ((strcasecmp(key, "EMS_REQUESTS") == 0) && (strcasecmp(value, "false") == 0))
-                cfg.ems_requests = false;
-            else if ((strcasecmp(key, "HST_REQUESTS") == 0) && (strcasecmp(value, "false") == 0))
-                cfg.hst_requests = false;
-            else if ((strcasecmp(key, "DCB_REQUESTS") == 0) && (strcasecmp(value, "false") == 0))
-                cfg.dcb_requests = false;
-            else if ((strcasecmp(key, "SOC_LIMITER") == 0) && (strcasecmp(value, "true") == 0))
-                cfg.soc_limiter = true;
-            else if ((strcasecmp(key, "DAILY_VALUES") == 0) && (strcasecmp(value, "false") == 0))
-                cfg.daily_values = false;
-            else if ((strcasecmp(key, "STATISTIC_VALUES") == 0) && (strcasecmp(value, "false") == 0))
-                cfg.statistic_values = false;
-            else if ((strcasecmp(key, "WALLBOX") == 0) && (strcasecmp(value, "true") == 0))
-                cfg.wallbox = true;
-            else if ((strcasecmp(key, "LIMIT_CHARGE_SOC") == 0) && (atoi(value) >= 0) && (atoi(value) <= 100))
+            } else if ((strcasecmp(key, "USE_TRUE_FALSE") == 0) && (strcasecmp(value, "false") == 0)) {
+                strcpy(cfg.true_value, "1");
+                strcpy(cfg.false_value, "0");
+            } else if ((strcasecmp(key, "LIMIT_CHARGE_SOC") == 0) && (atoi(value) >= 0) && (atoi(value) <= 100))
                 storeIntegerValue(RSCP_MQTT::RscpMqttCache, 0, 0, atoi(value), IDX_LIMIT_CHARGE_SOC, true);
             else if ((strcasecmp(key, "LIMIT_DISCHARGE_SOC") == 0) && (atoi(value) >= 0) && (atoi(value) <= 100))
                 storeIntegerValue(RSCP_MQTT::RscpMqttCache, 0, 0, atoi(value), IDX_LIMIT_DISCHARGE_SOC, true);
@@ -2880,123 +3020,8 @@ int main(int argc, char *argv[]) {
                 storeIntegerValue(RSCP_MQTT::RscpMqttCache, 0, 0, 1, IDX_LIMIT_DISCHARGE_DURABLE, true);
             else if ((strcasecmp(key, "LIMIT_DISCHARGE_BY_HOME_POWER") == 0) && (atoi(value) >= 0) && (atoi(value) <= 99999))
                 storeIntegerValue(RSCP_MQTT::RscpMqttCache, 0, 0, atoi(value), IDX_LIMIT_DISCHARGE_BY_HOME_POWER, true);
-            else if ((strcasecmp(key, "AUTO_REFRESH") == 0) && (strcasecmp(value, "true") == 0))
-                cfg.auto_refresh = true;
-            else if ((strcasecmp(key, "USE_TRUE_FALSE") == 0) && (strcasecmp(value, "false") == 0)) {
-                strcpy(cfg.true_value, "1");
-                strcpy(cfg.false_value, "0");
-            } else if (strcasecmp(key, "FORCE_PUB") == 0) {
-                store.type = FORCED_TOPIC;
-                strcpy(store.topic, value);
-                RSCP_MQTT::TopicStore.push_back(store);
-            }
-            else if (strcasecmp(key, "TOPIC_LOG") == 0) {
-                store.type = LOG_TOPIC;
-                strcpy(store.topic, value);
-                RSCP_MQTT::TopicStore.push_back(store);
-            }
-            else if ((strcasecmp(key, "RAW_MODE") == 0) && (strcasecmp(value, "true") == 0))
-                cfg.raw_mode = true;
-            else if (strcasecmp(key, "RAW_TOPIC_REGEX") == 0)
-                cfg.raw_topic_regex = strdup(value);
-// Issue #9 
-            else if (strcasecmp(key, "CORRECT_PM_0_UNIT") == 0) {
-                correctExternalPM(RSCP_MQTT::RscpMqttCache, 0, value, 0);
-            }
-            else if (strcasecmp(key, "CORRECT_PM_0_DIVISOR") == 0) {
-                correctExternalPM(RSCP_MQTT::RscpMqttCache, 0, NULL, atoi(value));
-            }
-            else if (strcasecmp(key, "CORRECT_PM_1_UNIT") == 0) {
-                correctExternalPM(RSCP_MQTT::RscpMqttCache, 1, value, 0);
-            }
-            else if (strcasecmp(key, "CORRECT_PM_1_DIVISOR") == 0) {
-                correctExternalPM(RSCP_MQTT::RscpMqttCache, 1, NULL, atoi(value));
-            }
-            else if (strncasecmp(key, "ADD_NEW_REQUEST", strlen("ADD_NEW_REQUEST")) == 0) {
-                int order = 0;
-                int index = -1;
-                char container[128];
-                char tag[128];
-                bool one_shot = false;
-                memset(container, 0, sizeof(container));
-                memset(tag, 0, sizeof(tag));
-                if (!strcasecmp(key, "ADD_NEW_REQUEST_AT_START")) one_shot = true;
-                if ((sscanf(value, "%127[^:-]:%127[^:-]:%d-%d", container, tag, &index, &order) == 4) || (sscanf(value, "%127[^:-]:%127[^:-]-%d", container, tag, &order) == 3)) {
-                    if (isTag(RSCP_TAGS::RscpTagsOverview, container, true) && isTag(RSCP_TAGS::RscpTagsOverview, tag, false)) pushAdditionalTag(tagID(RSCP_TAGS::RscpTagsOverview, container), tagID(RSCP_TAGS::RscpTagsOverview, tag), index, order, one_shot);
-                } else logMessage(cfg.logfile, (char *)__FILE__, __LINE__, (char *)"key >%s< value >%s< not enough attributes.\n", key, value);
-            }
-            else if (strcasecmp(key, "ADD_NEW_TOPIC") == 0) {
-                int divisor = 1;
-                int bit = 1;
-                int index = 0;
-                char container[128];
-                char tag[128];
-                char topic[TOPIC_SIZE];
-                char unit[128];
-                memset(container, 0, sizeof(container));
-                memset(tag, 0, sizeof(tag));
-                memset(topic, 0, sizeof(topic));
-                memset(unit, 0, sizeof(unit));
-                if ((sscanf(value, "%127[^:]:%127[^:]:%d:%127[^:]:%d:%d:%127[^:]", container, tag, &index, unit, &divisor, &bit, topic) == 7) ||
-                    (sscanf(value, "%127[^:]:%127[^:]:%127[^:]:%d:%d:%127[^:]", container, tag, unit, &divisor, &bit, topic) == 6)) {
-                    if (isTag(RSCP_TAGS::RscpTagsOverview, container, false) && isTag(RSCP_TAGS::RscpTagsOverview, tag, false)) addTopic(tagID(RSCP_TAGS::RscpTagsOverview, container), tagID(RSCP_TAGS::RscpTagsOverview, tag), index, topic, unit, F_AUTO, divisor, bit, true);
-                } else logMessage(cfg.logfile, (char *)__FILE__, __LINE__, (char *)"key >%s< value >%s< not enough attributes.\n", key, value);
-            }
-            else if (strcasecmp(key, "ADD_NEW_SET_TOPIC") == 0) {
-                char container[128];
-                char tag[128];
-                int index = 0;
-                char topic[TOPIC_SIZE];
-                char regex_true[128];
-                char value_true[128];
-                char regex_false[128];
-                char value_false[128];
-                char type[128];
-                memset(container, 0, sizeof(container));
-                memset(tag, 0, sizeof(tag));
-                memset(topic, 0, sizeof(topic));
-                memset(regex_true, 0, sizeof(regex_true));
-                memset(value_true, 0, sizeof(value_true));
-                memset(regex_false, 0, sizeof(regex_false));
-                memset(value_false, 0, sizeof(value_false));
-                memset(type, 0, sizeof(type));
-                if ((sscanf(value, "%127[^:#]:%127[^:#]:%d:%127[^:#]:%127[^:#]:%127[^:#]:%127[^:#]:%127[^:#]#%127[^:#]", container, tag, &index, topic, regex_true, value_true, regex_false, value_false, type) == 9) || (sscanf(value, "%127[^:#]:%127[^:#]:%d:%127[^:#]:%127[^:#]#%127[^:#]", container, tag, &index, topic, regex_true, type) == 6)) {
-                    if (isTag(RSCP_TAGS::RscpTagsOverview, container, false) && isTag(RSCP_TAGS::RscpTagsOverview, tag, false) && (index >= 0)) addSetTopic(tagID(RSCP_TAGS::RscpTagsOverview, container), tagID(RSCP_TAGS::RscpTagsOverview, tag), index, topic, regex_true, value_true, regex_false, value_false, typeID(RSCP_TAGS::RscpTypeNames, type), true);
-                } else {
-                    logMessage(cfg.logfile, (char *)__FILE__, __LINE__, (char *)"key >%s< value >%s< not enough attributes.\n", key, value);
-                }
-            }
         }
     }
-    fclose(fp);
-
-    // Overwrite with environment parameters
-    env = getenv("E3DC_IP");
-    if (env) strcpy(cfg.e3dc_ip, env);
-    env = getenv("E3DC_PORT");
-    if (env) cfg.e3dc_port = atoi(env);
-    env = getenv("E3DC_USER");
-    if (env) strcpy(cfg.e3dc_user, env);
-    env = getenv("E3DC_PASSWORD");
-    if (env) strcpy(cfg.e3dc_password, env);
-    env = getenv("E3DC_AES_PASSWORD");
-    if (env) strcpy(cfg.aes_password, env);
-    env = getenv("PREFIX");
-    if (env) cfg.prefix = strdup(env);
-    env = getenv("HISTORY_START_YEAR");
-    if (env) cfg.history_start_year = atoi(env);
-    env = getenv("INTERVAL");
-    if (env) cfg.interval = atoi(env);
-    env = getenv("RAW_MODE");
-    if (env && (strcasecmp(env, "true") == 0)) cfg.raw_mode = true;
-    env = getenv("WALLBOX");
-    if (env && (strcasecmp(env, "true") == 0)) cfg.wallbox = true;
-    env = getenv("VERBOSE");
-    if (env && (strcasecmp(env, "true") == 0)) cfg.verbose = true;
-    env = getenv("PVI_TRACKER");
-    if (env) cfg.pvi_tracker = atoi(env);
-    env = getenv("BATTERY_STRINGS");
-    if (env) cfg.battery_strings = atoi(env);
 
     mkfifo(wfifo, 0666);
     mkfifo(rfifo, 0666);
@@ -3037,19 +3062,19 @@ int main(int argc, char *argv[]) {
     printf("rscp2p [%s]\n", RSCP2P);
     printf("E3DC system >%s:%u< user: >%s<\n", cfg.e3dc_ip, cfg.e3dc_port, cfg.e3dc_user);
     if (!std::regex_match(cfg.e3dc_ip, std::regex("^(?:\\b\\.?(?:25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)){4}$"))) {
-        printf("Error: >%s< is not a valid IP address. Please correct the config file!\n", cfg.e3dc_ip);
+        printf("Error: >%s< is not a valid IP address. Please correct the config!\n", cfg.e3dc_ip);
         exit(EXIT_FAILURE);
     }
     if (hasSpaces(cfg.e3dc_user)) {
-        printf("Error: E3DC_USER >%s< contains spaces. Please correct the config file!\n", cfg.e3dc_user);
+        printf("Error: E3DC_USER >%s< contains spaces. Please correct the config!\n", cfg.e3dc_user);
         exit(EXIT_FAILURE);
     }
     if (hasSpaces(cfg.e3dc_password)) {
-        printf("Error: E3DC_PASSWORD contains spaces. Please correct the config file!\n");
+        printf("Error: E3DC_PASSWORD contains spaces. Please correct the config!\n");
         exit(EXIT_FAILURE);
     }
     if (hasSpaces(cfg.aes_password)) {
-        printf("Error: E3DC_AES_PASSWORD contains spaces. Please correct the config file!\n");
+        printf("Error: E3DC_AES_PASSWORD contains spaces. Please correct the config!\n");
         exit(EXIT_FAILURE);
     }
 

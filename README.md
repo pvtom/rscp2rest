@@ -23,22 +23,13 @@ docker run --rm -d -e TZ=Europe/Berlin -e E3DC_IP=<ip address> -e E3DC_USER=<use
 
 # mandatory
 E3DC_IP
-E3DC_PORT (default: 5033)
+E3DC_PORT
 E3DC_USER
 E3DC_PASSWORD
 E3DC_AES_PASSWORD
-
-# optional
-PREFIX
-INTERVAL
-RAW_MODE
-WALLBOX
-PVI_TRACKER
-BATTERY_STRINGS
-HISTORY_START_YEAR
-USE_HTTPS
-VERBOSE
 ```
+
+Please find more parameters [here](CONFIG.md).
 
 Or start the container with an existing .config file
 
