@@ -19,8 +19,8 @@
 #include <mutex>
 #include <fcntl.h>
 
-#define RSCP2P                  "1.10"
-#define RSCP2P_LONG             "1.10.3.38"
+#define RSCP2P                  "1.11"
+#define RSCP2P_LONG             "1.11.3.39"
 
 #define AES_KEY_SIZE            32
 #define AES_BLOCK_SIZE          32
@@ -1670,6 +1670,7 @@ void createRequest(SRscpFrameBuffer * frameBuffer) {
                 protocol.appendValue(&WBContainer, TAG_WB_REQ_PM_ACTIVE_PHASES);
                 protocol.appendValue(&WBContainer, TAG_WB_REQ_EXTERN_DATA_ALG);
                 protocol.appendValue(&WBContainer, TAG_WB_REQ_NUMBER_PHASES);
+                protocol.appendValue(&WBContainer, TAG_WB_REQ_AUTO_PHASE_SWITCH_ENABLED); // Issue #111
                 protocol.appendValue(&WBContainer, TAG_WB_REQ_KEY_STATE);
                 protocol.appendValue(&WBContainer, TAG_WB_REQ_PM_POWER_L1);
                 protocol.appendValue(&WBContainer, TAG_WB_REQ_PM_POWER_L2);
@@ -2809,7 +2810,7 @@ int main(int argc, char *argv[], char *envp[]) {
             if (skip) continue;
             memset(key, 0, sizeof(key));
             memset(value, 0, sizeof(value));
-            if (sscanf(line, "%127[^ \t=]=%127[^\n]", key, value) == 2) {
+            if (sscanf(line, "%127[^ \t=]=%127[^\r^\n]", key, value) == 2) { // Issue #116 accept Windows format as well
                 if (strcasecmp(key, "E3DC_IP") == 0)
                     strcpy(cfg.e3dc_ip, value);
                 else if (strcasecmp(key, "E3DC_PORT") == 0)
@@ -3055,7 +3056,11 @@ int main(int argc, char *argv[], char *envp[]) {
             addSetTopic(TAG_WB_REQ_DATA, TAG_WB_REQ_SET_MIN_CHARGE_CURRENT, c, topic, (char *)"^[0-9]{1,2}$", (char *)"", (char *)"", (char *)"", RSCP::eTypeUChar8, false);
 
             sprintf(topic, "wallbox_%d_number_phases", c + 1);
-            addSetTopic(TAG_WB_REQ_DATA, TAG_WB_REQ_SET_NUMBER_PHASES, c, topic, (char *)"^1|3$", (char *)"", (char *)"", (char *)"", RSCP::eTypeUChar8, true);
+            addSetTopic(TAG_WB_REQ_DATA, TAG_WB_REQ_SET_NUMBER_PHASES, c, topic, (char *)"^1|3$", (char *)"", (char *)"", (char *)"", RSCP::eTypeUChar8, false);
+
+// Issue #111
+            sprintf(topic, "set/wallbox/%d/auto_phase_switch", c + 1);
+            addSetTopic(TAG_WB_REQ_DATA, TAG_WB_REQ_SET_AUTO_PHASE_SWITCH_ENABLED, c, topic, (char *)"^true|on|1$", (char *)"true", (char *)"^false|off|0$", (char *)"false", RSCP::eTypeBool, true);
         }
     }
 

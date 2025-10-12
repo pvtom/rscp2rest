@@ -250,6 +250,7 @@
 | Wallbox Phases | wallbox_phases_L2 | (true/false) |
 | Wallbox Phases | wallbox_phases_L3 | (true/false) |
 | Wallbox Phases | wallbox_number_phases | (1/3) |
+| Wallbox Phases | wallbox_auto_phase_switch | (true/false) |
 | Wallbox Plugged | wallbox_plugged | (true/false) |
 | Wallbox Power All | wallbox_solar_power | [W] |
 | Wallbox Power Solar | wallbox_total_power | [W] |
@@ -336,6 +337,7 @@
 | Set battery discharge until [%] | wallbox_discharge_battery_until | [%] |
 | Set disable charging battery at mix mode | wallbox_disable_battery_at_mix_mode | (true/false) |
 | Set number of phases | wallbox_number_phases | (1/3) |
+| Set auto phase switch | wallbox_auto_phase_switch | (true/false) |
 | Historical daily data | | |
 | Query data for a specific day | request_day | "2023-12-31" |
 | Settings and others | | |
