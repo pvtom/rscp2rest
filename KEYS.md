@@ -92,7 +92,11 @@
 | EMS Home Power | home_power | [W] |
 | EMS Home Power Min (today) | home_power_min | [W] |
 | EMS Home Power Max (today) | home_power_max | [W] |
-| EMS Idle Periods | idle_period_<day>_<mode> | "active:hh:mi-hh:mi" |
+| EMS Idle Periods V1 | idle_period_<day>_<mode> | "active:hh:mi-hh:mi" |
+| EMS Idle Periods V2 | idle_period_<nr> | "name:days:type:active:hh:mi-hh:mi" |
+| EMS Idle Periods V2 | idle_period_change | 1234 |
+| EMS Idle Periods V2 | idle_period_enable | (true/false) |
+| EMS Idle Periods V2 | idle_period_number | 5 |
 | EMS Installed Peak Power | system_installed_peak_power | [W] |
 | EMS Inverter Count | system_inverter_count | |
 | EMS Max Charge Power | ems_max_charge_power | [W] |

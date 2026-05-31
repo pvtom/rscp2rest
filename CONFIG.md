@@ -23,6 +23,7 @@
 | FORCE_PUB * | string | e3dc/[a-z]+/power |
 | HISTORY_START_YEAR | integer | 2024 |
 | HST_REQUESTS | true/false | true |
+| IDLE_PERIODS_V2 | true/false | false |
 | INTERVAL | integer | 4 |
 | LIMIT_CHARGE_SOC | 0 - 100 | 0 |
 | LIMIT_DISCHARGE_SOC | 0 - 100 | 0 |

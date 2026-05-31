@@ -113,6 +113,8 @@ typedef struct _config_t {
     char false_value[6];
     bool raw_mode;
     char *raw_topic_regex;    
+    bool raw_with_types;
+    bool idle_periods_v2;
 } config_t;
 
 #endif

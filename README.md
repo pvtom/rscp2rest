@@ -85,6 +85,12 @@ curl -X POST -H "Content-Type: application/json" -d '{"key":"<key>","value":"<va
 Example:
 ```
 curl -X POST -H "Content-Type: application/json" -d '{"key":"ems_weather_regulation","value":"true"}' http://<your server>:3300/data
+
+curl -X POST -H "Content-Type: application/json" -d '{"key":"idle_period_enable","value":"true"}' http://<your server>:3300/data
+
+curl -X POST -H "Content-Type: application/json" -d '{"key":"idle_period","value":"weekend:saturday,sunday:charge:true:00:00-23:59"}' http://<your server>:3300/data
+
+curl -X POST -H "Content-Type: application/json" -d '{"key":"idle_period_delete","value":"weekend"}' http://<your server>:3300/data
 ```
 
 ### DELETE Requests
